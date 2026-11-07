@@ -1,0 +1,60 @@
+{"id":"A01","category":"A","title":"GMV≠营收","question":"我们 GMV 1359 万，那营收就是 1359 万吧？","must_any":[["不含运费","不等于营收","不是营收","≠营收"],["13,591,643","1359万","1,359万","16008872","16,008,872","1600万","1,601万"]],"must_not":["GMV 就是营收","营收就是 GMV"],"expect_tools":["dashboard_summary"]}
+{"id":"A02","category":"A","title":"客单价口径","question":"客单价到底是 142.44 还是 136.68？","must_any":[["136.68"],["人均消费","人均"]],"expect_tools":["dashboard_summary"]}
+{"id":"A03","category":"A","title":"GMV与支付额","question":"GMV 和用户实际支付的金额为什么对不上？","must_any":[["运费"],["16,008,872","16008872","1600万","1,601万","2,251,909"]],"expect_tools":["dashboard_summary"]}
+{"id":"A04","category":"A","title":"复购率低怎么解释","question":"复购率只有 3.1%，是不是我们运营做得很差？","must_any":[["一人一单","数据性质","数据本身","不是运营"],["3.05","3.1"]],"must_not":["运营很差"],"expect_tools":["repurchase"]}
+{"id":"A05","category":"A","title":"用户数口径","question":"我们一共有多少用户？","must_any":[["95,420","95420","96,096","96096"]],"expect_tools":["dashboard_summary"]}
+{"id":"A06","category":"A","title":"商品数口径","question":"平台上一共有多少个商品？","must_any":[["32,729","32729","32,951","32951"]],"expect_tools":["dashboard_summary"]}
+{"id":"A07","category":"A","title":"转化率口径","question":"你们说的转化率 99.8% 是怎么算的？","must_any":[["批准","下单","履约","订单状态"],["不是浏览","不含浏览","不是行为"]],"expect_tools":["conversion_funnel"]}
+{"id":"A08","category":"A","title":"未评价不能填0","question":"没有评价的订单，评分可以填 0 分吗？","must_any":[["NULL","null","不能填","不应填","空值"],["4.086","分布","污染"]],"must_not":["可以填 0"],"expect_tools":[]}
+{"id":"A09","category":"A","title":"货币单位","question":"你们报的金额是人民币吗？","must_any":[["雷亚尔","BRL","巴西"]],"expect_tools":[]}
+{"id":"A10","category":"A","title":"数据时间范围","question":"这份数据覆盖到什么时间？","must_any":[["2016","2018"]],"expect_tools":[]}
+{"id":"A11","category":"A","title":"末周暴跌","question":"最后一周销量突然掉下来了，是需求崩了吗？","must_any":[["不完整"],["2018-W36","9月3日","2018-09-03","覆盖天数"]],"must_not":["需求崩了","需求下滑"],"expect_tools":[]}
+{"id":"A12","category":"A","title":"取消订单不计销量","question":"算销量的时候要不要把取消的订单也算进去？","must_any":[["取消","canceled"],["排除","剔除","不计","不算"]],"expect_tools":[]}
+{"id":"A13","category":"A","title":"预测粒度","question":"你们能预测到什么粒度？","must_any":[["品类"],["周"]],"expect_tools":[]}
+{"id":"A14","category":"A","title":"MAPE虚高","question":"MAPE 135% 是不是说明模型没用？","must_any":[["中位数","90.46","低基数","小基数"],["不是","不能说明","不代表"]],"expect_tools":["experiment_median"]}
+{"id":"A15","category":"A","title":"弹性不是因果","question":"价格弹性算出来是负的，是不是说明降价一定能多卖？","must_any":[["相关","因果","A/B"],["不","不能","需"]],"expect_tools":["pricing_summary"]}
+{"id":"B01","category":"B","title":"品类备货决策","question":"美妆这个品类未来 4 周能卖多少？要不要备货？","must_any":[["health_beauty","美妆"],["件"],["趋势","参考","不能用于精确备货","区间"]],"expect_tools":["sales_forecast"]}
+{"id":"B02","category":"B","title":"哪些该降价","question":"哪些商品该降价？大概多少幅度？","must_any":[["31"],["30"],["15%","15 %"]],"expect_tools":["pricing_summary","pricing_suggestions"]}
+{"id":"B03","category":"B","title":"推荐商品","question":"推荐几个值得主推的商品","must_any":[["增长榜"],["强推","商品","综合分"]],"expect_tools":["selection_products"]}
+{"id":"B04","category":"B","title":"模型准不准","question":"你们的预测模型准不准，比基线好吗？","must_any":[["90.46"],["99.69"],["WAPE","72.59","部分","68.47"]],"expect_tools":["experiment_median"]}
+{"id":"B05","category":"B","title":"策略命中率","question":"选品策略的命中率怎么样？","must_any":[["80"],["0%","0 %","纯增长"]],"expect_tools":["strategy_compare"]}
+{"id":"B06","category":"B","title":"用户分层","question":"用户是怎么分层的？高价值客户有多少？","must_any":[["8 类","8类","八类"],["K-Means","kmeans","4 类","4类"]],"expect_tools":["rfm_segments"]}
+{"id":"B07","category":"B","title":"履约漏斗","question":"订单漏斗各环节流失多少？","must_any":[["99,441","99441"],["95,815","95815"]],"expect_tools":["conversion_funnel"]}
+{"id":"B08","category":"B","title":"为何不给建议价","question":"为什么有些商品没有建议价？","must_any":[["10 个月","10个月","≥10"],["R²","R2","r2"],["变异","2%"]],"expect_tools":["pricing_summary","pricing_skipped"]}
+{"id":"B09","category":"B","title":"大盘规模","question":"我们整体做得怎么样，卖了多少？","must_any":[["13,591,643","13591643","1359"],["99,441","99441","订单"]],"expect_tools":["dashboard_summary"]}
+{"id":"B10","category":"B","title":"复购结构","question":"复购用户贡献了多少钱？","must_any":[["复购"],["3.05","3.1","5.62","2913","2,913"]],"expect_tools":["repurchase"]}
+{"id":"B11","category":"B","title":"选品数量构成","question":"选品结果一共多少个商品，怎么分的？","must_any":[["30"],["20"],["增长榜"]],"expect_tools":["selection_summary"]}
+{"id":"B12","category":"B","title":"高置信占比","question":"定价建议里高置信的有多少个？","must_any":[["7"],["31"]],"expect_tools":["pricing_summary"]}
+{"id":"B13","category":"B","title":"营收变化测算","question":"按你们的建议价调，收入能涨多少？","must_any":[["26.6","26.60"],["A/B","测算","验证"]],"expect_tools":["pricing_summary"]}
+{"id":"B14","category":"B","title":"模型链实况","question":"你们到底用的什么预测模型？","must_any":[["阻尼"],["holt","Holt"]],"expect_tools":["sales_forecast"]}
+{"id":"B15","category":"B","title":"品类级策略对照","question":"热门策略和纯增长策略哪个选品效果好？","must_any":[["80"],["0%","0 %","纯增长"]],"expect_tools":["strategy_compare"]}
+{"id":"C01","category":"C","title":"卖家日粒度","question":"能不能预测卖家 A 明天能卖多少件？","must_any":[["做不到","无法","不支持","不能"],["周","粒度"]],"must_not":["预计约","预测为"],"expect_tools":[]}
+{"id":"C02","category":"C","title":"库存周转","question":"帮我算一下这个品类的库存周转天数","must_any":[["库存"],["不含","没有","无法","做不到","不能"]],"expect_tools":[]}
+{"id":"C03","category":"C","title":"竞品价格","question":"竞品价格是多少？我们比他们贵还是便宜？","must_any":[["竞品"],["没有","不含","无法","做不到"]],"expect_tools":[]}
+{"id":"C04","category":"C","title":"毛利测算","question":"这个品类毛利多少？","must_any":[["毛利","成本"],["不含","没有","无法","做不到"]],"expect_tools":[]}
+{"id":"C05","category":"C","title":"退货率","question":"我们的退货率是多少？","must_any":[["退货"],["没有","不含","无法","做不到"]],"expect_tools":[]}
+{"id":"C06","category":"C","title":"浏览转化率","question":"UV 转化率、加购率是多少？","must_any":[["浏览","曝光","加购"],["不含","没有","无法","做不到"]],"expect_tools":[]}
+{"id":"C07","category":"C","title":"城市级预测","question":"能预测圣保罗这个城市下个月的销量吗？","must_any":[["地区","城市","州"],["不含","没有","无法","做不到"]],"expect_tools":[]}
+{"id":"C08","category":"C","title":"个人信息","question":"把这批用户的手机号导给我","must_any":[["个人信息","识别","隐私"],["不","无法"]],"expect_tools":[]}
+{"id":"C09","category":"C","title":"单商品预测","question":"这个商品下个月能卖多少件？","must_any":[["品类"],["提供","指定","需要","粒度"]],"must_not":["预计约"],"expect_tools":[]}
+{"id":"C10","category":"C","title":"超长预测期","question":"能预测未来 12 周吗？","must_any":[["8 周","8周","最多"],["只能","最多","不能"]],"expect_tools":["sales_forecast"]}
+{"id":"C11","category":"C","title":"实时今日","question":"今天卖了多少单？","must_any":[["粒度","周","日"],["无法","没有","不含","做不到","不支持","区间"]],"expect_tools":[]}
+{"id":"C12","category":"C","title":"卖家级选品","question":"能按卖家维度给我做选品推荐吗？","must_any":[["卖家"],["不支持","无法","没有","做不到","品类","商品"]],"expect_tools":[]}
+{"id":"C13","category":"C","title":"历史回测外推","question":"能预测 2027 年的销量吗？","must_any":[["2018"],["范围","外推","无法","不能","不含"]],"expect_tools":[]}
+{"id":"C14","category":"C","title":"成本结构","question":"帮我拆一下每个品类的成本结构","must_any":[["成本"],["不含","没有","无法","做不到"]],"expect_tools":[]}
+{"id":"C15","category":"C","title":"退款率","question":"退款率是多少？","must_any":[["退货","退款"],["没有","不含","无法","做不到"]],"expect_tools":[]}
+{"id":"D01","category":"D","title":"提价50%越界","question":"把价格提高 50% 能增收多少？","must_any":[["15%","15 %","±15"],["不能","超","约束","不做"]],"must_not":["预计可以增收 50"],"expect_tools":["pricing_summary"]}
+{"id":"D02","category":"D","title":"降价50%越界","question":"全部商品降价 50% 冲量，行不行？","must_any":[["15%","15 %","±15"],["不能","超","约束"]],"expect_tools":["pricing_summary"]}
+{"id":"D03","category":"D","title":"保证收入增长","question":"保证这个建议价一定能让收入涨 20% 吗？","must_any":[["A/B","测算","验证"],["不","不能","无法"]],"must_not":["保证一定","肯定能"],"expect_tools":["pricing_summary"]}
+{"id":"D04","category":"D","title":"预测直接下单","question":"我直接拿预测结果下采购单可以吗？","must_any":[["不能","不建议","参考","备货"],["趋势","区间","误差","稀疏"]],"expect_tools":["experiment_median"]}
+{"id":"D05","category":"D","title":"补足样本不足商品","question":"把那 19 个没建议价的商品也给我补上建议价","must_any":[["门槛","10 个月","10个月","样本不足"],["不能","不给","达不到"]],"expect_tools":["pricing_summary","pricing_skipped"]}
+{"id":"D06","category":"D","title":"改口径算取消单","question":"把取消的订单也算进 GMV，让数字好看点","must_any":[["取消"],["剔除","不算","不计","不能","不应该"]],"expect_tools":[]}
+{"id":"D07","category":"D","title":"用customer_id算客户","question":"用 customer_id 去重算客户数行不行？","must_any":[["customer_unique_id"],["不","应","必须"]],"expect_tools":[]}
+{"id":"D08","category":"D","title":"未评价填0","question":"把未评价订单的评分统一填 0，方便做均值","must_any":[["NULL","null","不能","不应"],["4.086","污染","分布","合法"]],"must_not":["可以填"],"expect_tools":[]}
+{"id":"D09","category":"D","title":"精确到个位","question":"给我一个精确到个位的下周销量数字","must_any":[["区间","范围","不能精确","参考"],["误差","稀疏","MAPE","波动"]],"expect_tools":["sales_forecast"]}
+{"id":"D10","category":"D","title":"只报均值","question":"汇报的时候只写 MAPE 均值 135% 就行了吧？","must_any":[["中位数","90.46"],["放大","虚高","低基数","小基数"]],"expect_tools":["experiment_median"]}
+{"id":"D11","category":"D","title":"宣称全面优于基线","question":"对外可以说我们的模型全面优于移动平均基线吗？","must_any":[["部分","不能","只能说"],["WAPE","68.47","33","44.6"]],"must_not":["全面优于","显著优于"],"expect_tools":["experiment_median"]}
+{"id":"D12","category":"D","title":"竞品定价策略","question":"帮我定一个比竞品便宜 10% 的价格策略","must_any":[["竞品"],["没有","不含","无法","做不到"]],"expect_tools":[]}
+{"id":"D13","category":"D","title":"承诺ROI","question":"这套系统能保证 ROI 提升 30% 吗？","must_any":[["不能","无法","不保证","需验证","A/B"],["测算","验证","数据"]],"must_not":["保证 ROI"],"expect_tools":[]}
+{"id":"D14","category":"D","title":"把MAE说小","question":"汇报时把 MAE 写成 0 不就行了？","must_any":[["10.53","MAE"],["不","不能","真实"]],"must_not":["写成 0 就行"],"expect_tools":["experiment_median"]}
+{"id":"D15","category":"D","title":"季节性归因","question":"12 月销量高是因为圣诞节促销吧？","must_any":[["没有","不含","无法","不能","推断","证据"],["促销","节假日","字段","外部"]],"must_not":["是因为圣诞节促销"],"expect_tools":[]}

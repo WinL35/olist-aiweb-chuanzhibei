@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Olist 经营分析与智能选品平台</title>
+  <link rel="stylesheet" href="/assets/style.css" />
+  <script src="/assets/vendor/vue.global.prod.js"></script>
+  <script src="/assets/vendor/echarts.min.js"></script>
+</head>
+<body>
+  <div id="app">
+    <aside class="sidebar">
+      <div class="logo">📊 Olist<br/>经营分析平台</div>
+      <nav>
+        <a v-for="m in menus" :key="m.key" :class="{active: view===m.key}" @click="view=m.key">
+          <span class="ico">{{ m.ico }}</span>{{ m.name }}
+        </a>
+      </nav>
+      <div class="side-foot">题目一 · 用户行为分析与智能选品推荐平台</div>
+    </aside>
+    <main class="content">
+      <header class="topbar">
+        <h1>{{ currentMenu.name }}</h1>
+        <span class="sub">{{ currentMenu.desc }}</span>
+      </header>
+      <component :is="view"></component>
+    </main>
+  </div>
+
+  <script src="/assets/app.js"></script>
+</body>
+</html>

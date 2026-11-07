@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# IDE
+.idea/
+.vscode/
+
+# 系统
+.DS_Store
+
+# 大文件与生成物（按需保留）
+Olist.sql
+olist_algo.db
+olist_algo_mysql.sql.bak
+
+# 会话临时工件
+.dsh-*/
+
+# 运行时反馈库
+llm/feedback/*.db
+
+# ---- 机密（绝不提交，只允许 .env.example） ----
+.env
+.env.local
+.env.*.local
+*_key.txt
+
+# ---- 大体积原始/清洗数据（用脚本重建，附 Kaggle 下载说明） ----
+cleaned/
+算法1/
+算法2/
+Olist_Views.sql
+olist_algo_mysql.sql
+schema.sql
+
+# ---- 会话临时工件 ----
+_memory_.ses
+.dsh-*/
+.pytest_cache/
+.mypy_cache/
+
+# ---- WorkBuddy 本地配置（项目助手的工作日志，与代码无关） ----
+.workbuddy/

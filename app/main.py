@@ -1,0 +1,142 @@
+# -*- coding: utf-8 -*-
+"""Olist 用户行为分析与智能选品推荐平台 - 后端入口
+
+启动方式（在项目根目录 Olist项目 下执行）:
+    python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+
+也可以双击运行上一级的「启动后端.py」。
+"""
+import os
+import sys
+from pathlib import Path
+
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+# 让 `import config` 能命中项目根目录的 config.py
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+import config
+
+from app.dashboard import router as dashboard_router
+from app.analysis import router as analysis_router
+from app.pricing import router as pricing_router
+from app.experiment import router as experiment_router
+from app.selection import router as selection_router
+from app.llm_api import router as llm_router
+
+app = FastAPI(
+    title="Olist 经营分析与智能选品平台",
+    version="1.1",
+    description="数据源：olist_db（业务宽表）+ olist_algo_db（算法1/算法2 结果，跨库查询）",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# ---------------- 全局异常处理（统一 JSON 结构）----------------
+def _err(code: int, message: str, data=None):
+    # HTTP 状态保持 200，业务错误码放 body，前端统一按 code 判断
+    return JSONResponse(status_code=200,
+                        content={"code": code, "message": message, "data": data})
+
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exc_handler(request: Request, exc: StarletteHTTPException):
+    """业务型 HTTP 异常（如 404）"""
+    return _err(exc.status_code, str(exc.detail))
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exc_handler(request: Request, exc: RequestValidationError):
+    """参数校验失败（如缺 category、weeks 超范围）"""
+    return _err(422, "参数校验失败", exc.errors())
+
+
+@app.exception_handler(Exception)
+async def any_exc_handler(request: Request, exc: Exception):
+    """兜底：数据库连不上、SQL 报错等"""
+    import traceback
+    traceback.print_exc()
+    return _err(500, f"服务异常: {type(exc).__name__}: {exc}")
+
+
+# ---------------- 路由注册 ----------------
+app.include_router(dashboard_router)    # /api/dashboard/*
+app.include_router(analysis_router)     # /api/*（RFM / 转化 / 预测）
+app.include_router(pricing_router)      # /api/pricing/*（算法2 定价建议）
+app.include_router(experiment_router)   # /api/experiment/*（算法2 离线实验）
+app.include_router(selection_router)    # /api/selection/*（算法2 选品结果）
+app.include_router(llm_router)          # /api/llm/*（垂直大模型：口径/工具/评测）
+
+
+@app.get("/api/health", tags=["基础"])
+def health():
+    """健康检查 + 数据库连通性（同时验证主库和算法结果库）。"""
+    from app.db import query_one
+    out = {"status": "ok", "db": {}, "algo_db": {}}
+    try:
+        r = query_one("SELECT DATABASE() AS db, VERSION() AS ver")
+        out["db"] = {"database": r["db"], "version": r["ver"], "ok": True}
+    except Exception as e:
+        out["db"] = {"ok": False, "error": str(e)}
+        out["status"] = "degraded"
+    try:
+        r = query_one(f"SELECT COUNT(*) AS n FROM {config.ALGO_DB}.algo1_rfm_user_tags")
+        out["algo_db"] = {"database": config.ALGO_DB, "rfm_rows": int(r["n"]), "ok": True}
+    except Exception as e:
+        out["algo_db"] = {"ok": False, "error": str(e)}
+        out["status"] = "degraded"
+    return out
+
+
+# ---------------- 静态前端 ----------------
+if os.path.isdir(config.STATIC_DIR):
+    app.mount("/assets",
+              StaticFiles(directory=os.path.join(config.STATIC_DIR, "assets")),
+              name="assets")
+
+
+@app.get("/", include_in_schema=False)
+def index():
+    p = os.path.join(config.STATIC_DIR, "index.html")
+    if os.path.exists(p):
+        return FileResponse(p)
+    return {"message": "前端尚未部署，后端 API 可用，接口文档见 /docs"}
+
+
+@app.get("/assistant", include_in_schema=False)
+def assistant():
+    """垂直大模型对话页（独立页面，不并入主 SPA）。"""
+    p = os.path.join(config.STATIC_DIR, "assistant.html")
+    if os.path.exists(p):
+        return FileResponse(p)
+    return {"message": "对话页未部署，接口可用：/api/llm/chat"}
+
+
+@app.get("/{full_path:path}", include_in_schema=False)
+def spa(full_path: str):
+    """SPA 兜底：未知路径一律返回 index.html。
+
+    ⚠️ 安全：路径参数可能是 URL 编码的穿越序列（如 %2e%2e%2f → ../），
+    直接 join 会把静态目录之外的源码/配置文件读出去（实测可读 config.py）。
+    必须用 realpath 归一化后校验仍位于 STATIC_DIR 内，否则回退 index.html。
+    """
+    root = os.path.realpath(config.STATIC_DIR)
+    if full_path:
+        p = os.path.realpath(os.path.join(root, full_path))
+        # 仅允许 STATIC_DIR 内部的文件（含 root 本身之下的任意深度）
+        if p.startswith(root + os.sep) and os.path.isfile(p):
+            return FileResponse(p)
+    idx = os.path.join(root, "index.html")
+    if os.path.exists(idx):
+        return FileResponse(idx)
+    return {"message": "not found"}

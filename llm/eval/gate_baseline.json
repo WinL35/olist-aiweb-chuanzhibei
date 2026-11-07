@@ -1,0 +1,57 @@
+{
+ "at": "2026-11-02T23:49:01",
+ "summary": [
+  {
+   "mode": "baseline",
+   "total": 60,
+   "pass": 0,
+   "acc": 0.0,
+   "A": 0.0,
+   "B": 0.0,
+   "C": 0.0,
+   "D": 0.0,
+   "tool_hit": 0.0,
+   "doc_rate": 0.0,
+   "avg_ms": 1
+  },
+  {
+   "mode": "no_tools",
+   "total": 60,
+   "pass": 50,
+   "acc": 83.3,
+   "A": 93.3,
+   "B": 53.3,
+   "C": 100.0,
+   "D": 86.7,
+   "tool_hit": 0.0,
+   "doc_rate": 90.0,
+   "avg_ms": 20
+  },
+  {
+   "mode": "no_rag",
+   "total": 60,
+   "pass": 60,
+   "acc": 100.0,
+   "A": 100.0,
+   "B": 100.0,
+   "C": 100.0,
+   "D": 100.0,
+   "tool_hit": 97.1,
+   "doc_rate": 0.0,
+   "avg_ms": 55
+  },
+  {
+   "mode": "full",
+   "total": 60,
+   "pass": 60,
+   "acc": 100.0,
+   "A": 100.0,
+   "B": 100.0,
+   "C": 100.0,
+   "D": 100.0,
+   "tool_hit": 97.1,
+   "doc_rate": 90.0,
+   "avg_ms": 51
+  }
+ ]
+}
