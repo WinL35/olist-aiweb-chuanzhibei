@@ -95,7 +95,15 @@
   table.eval th:first-child,table.eval td:first-child{text-align:left}
   table.eval th{color:var(--txt2);font-weight:600}
   .statusline{display:flex;gap:6px;flex-wrap:wrap}
+  /* 对话内嵌图表 */
+  .chat-chart{width:100%;height:340px;margin:12px 0 4px;background:var(--panel2);
+              border:1px solid var(--border);border-radius:10px}
+  .chart-tools{display:flex;gap:8px;margin-top:4px}
+  .chart-tools button{font-size:11px;padding:2px 10px;background:var(--panel);
+      border:1px solid var(--border);color:var(--txt2);border-radius:6px;cursor:pointer}
+  .chart-tools button:hover{color:var(--txt);border-color:var(--accent)}
 </style>
+<script src="/assets/vendor/echarts.min.js"></script>
 </head>
 <body>
 <header>
@@ -264,6 +272,56 @@ function attachFeedback(el, question, d){
   el.querySelector(".bubble").appendChild(fb);
 }
 
+// 多轮对话历史（最近 6 轮），让模型能处理「再按月拆」「那第二名呢」这类追问
+const history = [];
+
+// 把后端返回的 charts（ECharts option）渲染进气泡，并加导出按钮
+function renderCharts(el, charts){
+  if(!charts || !charts.length) return;
+  const bubble = el.querySelector(".bubble");
+  charts.forEach(opt => {
+    const box = document.createElement("div");
+    box.className = "chat-chart";
+    bubble.appendChild(box);
+    const c = echarts.init(box, null, {renderer:"canvas"});
+    c.setOption(opt);
+    const tools = document.createElement("div");
+    tools.className = "chart-tools";
+    tools.innerHTML = `<button data-a="png">导出 PNG</button><button data-a="csv">导出 CSV</button>`;
+    tools.querySelector('[data-a="png"]').onclick = () => {
+      const a = document.createElement("a");
+      a.href = c.getDataURL({pixelRatio:2, backgroundColor:"#141d30"});
+      a.download = ((opt.title && opt.title.text) || "chart") + ".png";
+      a.click();
+    };
+    tools.querySelector('[data-a="csv"]').onclick = () => downloadCSV(opt);
+    bubble.appendChild(tools);
+    window.addEventListener("resize", () => c.resize());
+  });
+}
+
+// 从 ECharts option 尽力提取数据导出 CSV（x 轴 + 各 series）
+function downloadCSV(opt){
+  const s0 = opt.series[0] || {};
+  const xs = (opt.xAxis && opt.xAxis.data)
+        || (s.data || []).map(d => (d && typeof d === "object") ? d.name : "")
+        || [];
+  const series = (opt.series || []).map(s => ({
+    name: s.name || "值",
+    data: (s.data || []).map(d => (d && typeof d === "object") ? d.value : d),
+  }));
+  let csv = "维度," + series.map(s => s.name).join(",") + "\n";
+  xs.forEach((x, i) => {
+    csv += `"${x}",` + series.map(s => (s.data[i] ?? "")).join(",") + "\n";
+  });
+  const blob = new Blob(["﻿" + csv], {type: "text/csv;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = ((opt.title && opt.title.text) || "data") + ".csv";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
 async function ask(text){
   if(!text.trim()) return;
   addMsg("user", text);
@@ -273,12 +331,14 @@ async function ask(text){
   try{
     const r = await fetch("/api/llm/chat", {
       method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({question:text, mode: $("#mode").value})
+      body: JSON.stringify({question:text, mode: $("#mode").value,
+                            history: history.slice(-12)})
     });
     const j = await r.json();
     if(j.code !== 0){ throw new Error(j.message || "请求失败"); }
     const d = j.data;
     el.querySelector(".body-text").innerHTML = render(d.answer);
+    renderCharts(el, d.charts || []);
     const bits = [`模式 ${d.mode}`, `置信度 ${d.confidence}`, `${d.elapsed_ms} ms`];
     if(d.provider) bits.push(d.provider === "offline" ? "离线规则引擎" : d.provider + "/" + d.model);
     if(d.refused) bits.push("已拒答");
@@ -286,6 +346,10 @@ async function ask(text){
     el.querySelector(".meta").innerHTML = bits.map(b => `<span>${esc(b)}</span>`).join("");
     attachFeedback(el, text, d);
     setSide(d);
+    // 成功后把这一轮问答记入历史（供下一轮追问使用）
+    history.push({role:"user", content:text});
+    history.push({role:"assistant", content:d.answer || ""});
+    if(history.length > 24) history.splice(0, history.length - 24);
     $("#chat").scrollTop = $("#chat").scrollHeight;
   }catch(e){
     el.querySelector(".body-text").innerHTML = `<span class="err">${esc(e.message)}</span>`;
