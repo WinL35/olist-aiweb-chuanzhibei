@@ -41,5 +41,10 @@ _memory_.ses
 .pytest_cache/
 .mypy_cache/
 
+# ---- 浏览器探针临时产物（CDP 截图验证用，跑完即删） ----
+_probe_*
+_tmp_*
+_check.js
+
 # ---- WorkBuddy 本地配置（项目助手的工作日志，与代码无关） ----
 .workbuddy/
