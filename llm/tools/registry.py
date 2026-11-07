@@ -255,6 +255,41 @@ TOOLS: list[dict[str, Any]] = [
         },
         "returns": "dict：data=[{类别, 统计项, 数值, 口径说明}]",
     },
+    # ---------------- 可视化 ----------------
+    {
+        "name": "render_chart",
+        "kind": "viz",
+        "description": "把【本轮已经调用过的查询工具】的真实结果画成图（折线/柱状/饼图/散点/漏斗）。"
+                       "⚠️ 本工具【不接受任何数据】：data_from 必须填一个本轮已经调用过、"
+                       "且返回里含记录数组的查询工具名（如 dashboard_category、dashboard_trend、"
+                       "rfm_segments、conversion_funnel、review_dist、region_sales 等）。"
+                       "数据一律从该工具的既成结果里取，你只需决定画成什么图、用哪些字段。"
+                       "当用户说「画/画个图/可视化/柱状图/折线图/饼图/趋势图/占比图」时，"
+                       "先调查询工具拿数据，再调本工具出图。禁止自己编造或估算图表数据。",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "chart_type": {"type": "string",
+                               "enum": ["line", "bar", "pie", "scatter", "funnel"],
+                               "description": "图型：line=趋势/时间序列，bar=对比/排行，"
+                                              "pie=占比，scatter=两数值关系，funnel=漏斗"},
+                "data_from": {"type": "string",
+                              "description": "本轮已调用的查询工具名（数据从它的返回里取）"},
+                "x_field": {"type": "string",
+                            "description": "维度字段名（类别轴/饼图名），如 category、state、segment、t"},
+                "y_fields": {"type": "array", "items": {"type": "string"},
+                             "description": "数值字段名列表，如 [\"gmv\"]、[\"gmv\",\"orders\"]；"
+                                            "pie/funnel/scatter 只用第一个"},
+                "title": {"type": "string", "description": "图标题，简述图中内容"},
+                "note": {"type": "string",
+                         "description": "图下方小字：口径/局限说明，如「GMV 含运费，已剔除取消单」"},
+                "limit": {"type": "integer", "minimum": 2, "maximum": 50,
+                          "description": "取前几条数据，默认 20"},
+            },
+            "required": ["chart_type", "data_from", "x_field", "y_fields"],
+        },
+        "returns": "dict：chart=ECharts option（前端直接 setOption 渲染），n_points=数据点数",
+    },
 ]
 
 TOOL_NAMES = [t["name"] for t in TOOLS]

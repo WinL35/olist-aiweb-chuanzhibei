@@ -73,15 +73,16 @@ def _citation_from(tool: str, res: dict) -> list[dict]:
 # LLM 路径
 # ---------------------------------------------------------------
 def _run_llm(question: str, mode: str, rules: list[dict],
-             snippets: list[dict]) -> dict:
+             snippets: list[dict], history: list[dict] | None = None) -> dict:
     provider = get_provider()
-    msgs = prompts.messages(question, mode, rules, snippets)
+    msgs = prompts.messages(question, mode, rules, snippets, history=history)
     use_tools = mode in ("full", "no_rag")
     schemas = registry.schema_for_llm() if use_tools else None
 
     trace: list[dict] = []
     tools_used: list[str] = []
     citations: list[dict] = []
+    charts: list[dict] = []
     content: str | None = None
     t0 = time.time()
 
@@ -106,6 +107,11 @@ def _run_llm(question: str, mode: str, rules: list[dict],
             res = _call_tool(name, args)
             tools_used.append(name)
             citations.extend(_citation_from(name, res))
+            # 收集图表：render_chart 返回的 data.chart 是 ECharts option
+            if res.get("ok"):
+                ch = (res.get("data") or {}).get("chart") if isinstance(res.get("data"), dict) else None
+                if isinstance(ch, dict):
+                    charts.append(ch)
             trace.append({"step": step + 1, "action": "tool", "tool": name,
                           "args": args, "ok": res.get("ok"),
                           "error": res.get("error"),
@@ -119,6 +125,7 @@ def _run_llm(question: str, mode: str, rules: list[dict],
         fb["provider"] = provider.name
         fb["model"] = provider.model
         fb["llm_fallback"] = True
+        fb["charts"] = charts
         fb["trace"] = trace
         fb["elapsed_ms"] = int((time.time() - t0) * 1000)
         return fb
@@ -131,6 +138,7 @@ def _run_llm(question: str, mode: str, rules: list[dict],
         "model": provider.model,
         "conclusion": _first_sentence(content),
         "citations": citations[:10],
+        "charts": charts,
         "tools_used": sorted(set(tools_used)),
         "rules_applied": [{"id": r["id"], "topic": r["topic"]} for r in rules],
         "snippets": [{"source": s["source"], "heading": s["heading"],
@@ -161,11 +169,19 @@ def _first_sentence(text: str) -> str:
 # ---------------------------------------------------------------
 # 统一入口
 # ---------------------------------------------------------------
-def run(question: str, mode: str | None = None) -> dict:
-    """回答一个问题。永不抛异常，失败也返回可读结果。"""
+def run(question: str, mode: str | None = None,
+        history: list[dict] | None = None) -> dict:
+    """回答一个问题。永不抛异常，失败也返回可读结果。
+
+    history：此前几轮对话 [{role, content}]，仅 LLM 路径使用，
+             让模型能处理「再按月份拆开」「那第二名呢」这类追问。
+    """
     question = (question or "").strip()
     mode = _norm_mode(mode)
     t0 = time.time()
+
+    # 每轮开始清空本轮工具结果上下文（render_chart 从这里取数）
+    executor.begin_turn()
 
     if not question:
         return {"question": "", "answer": "请先输入问题。", "mode": mode,
@@ -187,7 +203,7 @@ def run(question: str, mode: str | None = None) -> dict:
     # 有底座 → LLM 路径；否则 offline
     if get_provider() is not None:
         try:
-            r = _run_llm(question, mode, rules, snippets)
+            r = _run_llm(question, mode, rules, snippets, history=history)
             r["elapsed_ms"] = int((time.time() - t0) * 1000)
             return r
         except ProviderError as e:

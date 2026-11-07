@@ -26,6 +26,14 @@ BASE_RULES = """你是「Olist 电商经营决策助手」，一个面向中小�
 **数据依据** 逐条列出「指标：数值（来源工具）」，没有工具结果就写"无"。
 **口径提醒** 列出本次回答依赖的行业口径（引用规则编号）。
 **局限** 说明这次结论不能用于什么场景。
+
+【可视化】（涉及对比/分布/趋势/占比/排行，或用户要求画图时必须遵守）
+1. 先调用查询工具拿到数据，再调用 render_chart 出图，二者缺一不可。
+2. render_chart 的 data_from 必须填你本轮刚调用的查询工具名，图表数据由它自动生成，
+   你【绝不】自己填写或编造任何图表数值。
+3. 图型选择：趋势/时间序列用 line，对比/排行用 bar，占比用 pie，漏斗用 funnel。
+4. 出图后，在 note 参数里标注口径（如「GMV 含运费，已剔除取消单」）。
+5. 若问题不适合出图（如单一标量结论），可以不画，但要在回答里说明原因。
 """
 
 
@@ -80,8 +88,20 @@ def user_message(question: str) -> dict:
 
 def messages(question: str, mode: str = "full",
              rules: list[dict] | None = None,
-             snippets: list[dict] | None = None) -> list[dict]:
-    return [
-        {"role": "system", "content": system_prompt(question, mode, rules, snippets)},
-        user_message(question),
-    ]
+             snippets: list[dict] | None = None,
+             history: list[dict] | None = None) -> list[dict]:
+    """组装消息列表。history 插在 system 之后、当前问题之前。
+
+    只保留 user/assistant 的纯文本消息（剔除 tool 调用帧，避免超长），
+    最多带最近 6 轮，足够支撑「再按月份拆」「那第二名呢」这类追问。
+    """
+    msgs = [{"role": "system",
+             "content": system_prompt(question, mode, rules, snippets)}]
+    if history:
+        for h in history[-12:]:                     # 最多最近 6 轮（一问一答）
+            role = h.get("role")
+            text = h.get("content")
+            if role in ("user", "assistant") and isinstance(text, str) and text.strip():
+                msgs.append({"role": role, "content": text.strip()[:1500]})
+    msgs.append(user_message(question))
+    return msgs

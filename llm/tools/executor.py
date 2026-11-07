@@ -62,6 +62,39 @@ def reset_datasource_cache() -> None:
 
 
 # ---------------------------------------------------------------
+# 本轮工具结果上下文（render_chart 用）
+# ---------------------------------------------------------------
+# 关键设计：图表数据必须来自本轮真实工具返回，模型无权提供数字。
+# 每次工具成功执行后，把结果按工具名记录进 thread-local；
+# render_chart 只能从这里取数，取不到就报错，从源头杜绝图表幻觉。
+_turn = threading.local()
+
+
+def begin_turn() -> None:
+    """一轮对话开始时清空本轮结果（planner.run 入口调用）。"""
+    _turn.results = {}
+
+
+def _record(name: str, raw: Any) -> None:
+    """记录一次工具结果（execute 内部调用）。"""
+    try:
+        results = getattr(_turn, "results", None)
+        if results is None:
+            results = {}
+            _turn.results = results
+        results.setdefault(name, []).append(raw)
+    except Exception:
+        pass  # 记录失败不影响主流程
+
+
+def last_result(name: str) -> Any | None:
+    """取本轮某工具最新一次调用的原始结果；没调过返回 None。"""
+    results = getattr(_turn, "results", None) or {}
+    lst = results.get(name)
+    return lst[-1] if lst else None
+
+
+# ---------------------------------------------------------------
 # CSV 降级数据源
 # ---------------------------------------------------------------
 @lru_cache(maxsize=8)
@@ -450,6 +483,45 @@ def _t_exp_stats(a):
     return _exp()["stats"](group=a.get("group"))
 
 
+# ---------------------------------------------------------------
+# 可视化：render_chart
+# ---------------------------------------------------------------
+def _t_render_chart(a):
+    """把本轮某个查询工具的真实结果画成 ECharts 图。
+
+    关键：数据只取自本轮已调用工具的既成结果（last_result），
+    模型不接触、也无法提供任何数字。
+    """
+    from llm.tools import chart as chartmod
+
+    src = (a.get("data_from") or "").strip()
+    payload = last_result(src)
+    if payload is None:
+        called = list((getattr(_turn, "results", None) or {}).keys())
+        raise ToolError(
+            f"render_chart 的数据源「{src}」本轮未被调用，不能凭空画图。"
+            f"请先调用查询工具（如 dashboard_category）拿到数据，再指定 data_from 画图。"
+            f"本轮已调用过的工具：{called or '（无）'}")
+
+    records = chartmod._find_records(payload)
+    if records is None:
+        raise ToolError(f"「{src}」的返回里没有可用的记录数组，无法出图。")
+
+    limit = int(a.get("limit", 20) or 20)
+    records = records[:max(1, min(limit, 50))]
+
+    y_fields = a.get("y_fields") or []
+    if isinstance(y_fields, str):
+        y_fields = [y_fields]
+
+    option = chartmod.build_option(
+        a.get("chart_type"), records, a.get("x_field"), y_fields,
+        title=a.get("title", ""), note=a.get("note", ""))
+    return {"chart": option, "chart_type": a.get("chart_type"),
+            "x_field": a.get("x_field"), "y_fields": y_fields,
+            "data_from": src, "n_points": len(records)}
+
+
 TOOL_IMPL: dict[str, Callable[[dict], Any]] = {
     "dashboard_summary": _t_dashboard_summary,
     "dashboard_trend": _t_dashboard_trend,
@@ -473,6 +545,7 @@ TOOL_IMPL: dict[str, Callable[[dict], Any]] = {
     "experiment_median": _t_exp_median,
     "experiment_compare": _t_exp_compare,
     "experiment_summary_stats": _t_exp_stats,
+    "render_chart": _t_render_chart,
 }
 
 
@@ -524,8 +597,13 @@ def execute(name: str, args: dict | None = None,
                 "error": f"未知工具 {name}。可用工具：{', '.join(TOOL_IMPL)}"}
     try:
         raw = fn(args)
+        _record(name, raw)          # 记录原始结果，供 render_chart 取数
+        data = _compact(raw, max_items)
+        # 图表 option 不能被压缩（series.data 截断会画错图），原样透出
+        if isinstance(raw, dict) and "chart" in raw and isinstance(data, dict):
+            data["chart"] = raw["chart"]
         return {"ok": True, "tool": name, "source": datasource_mode(),
-                "data": _compact(raw, max_items)}
+                "data": data}
     except ToolError as e:
         return {"ok": False, "tool": name, "error": str(e)}
     except Exception as e:  # 数据库断了、参数类型错等

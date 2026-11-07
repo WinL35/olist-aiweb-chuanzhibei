@@ -37,6 +37,8 @@ REPORT_MD = BASE / "文档" / "评测报告.md"
 class ChatIn(BaseModel):
     question: str = Field(..., description="用户问题", max_length=500)
     mode: Optional[str] = Field(None, description="full / no_tools / no_rag / baseline")
+    history: Optional[list[dict]] = Field(
+        None, description="此前对话 [{role, content}]，用于多轮追问，最多带最近 6 轮")
 
 
 class FeedbackIn(BaseModel):
@@ -76,13 +78,14 @@ def rules(topic: Optional[str] = Query(None, description="按主题过滤")):
                       "wrong": r["wrong"], "always": bool(r.get("always"))} for r in rs]}
 
 
-def _chat(question: str, mode: str | None) -> dict:
+def _chat(question: str, mode: str | None,
+          history: list[dict] | None = None) -> dict:
     if not question or not question.strip():
         return _fail("question 不能为空", 422)
     if len(question) > 500:
         return _fail("问题过长（>500 字），请拆分提问", 422)
     try:
-        r = planner.run(question, mode)
+        r = planner.run(question, mode, history=history)
     except Exception as e:
         return _fail(f"{type(e).__name__}: {e}")
     return {"code": 0, "message": "ok", "data": r}
@@ -90,7 +93,7 @@ def _chat(question: str, mode: str | None) -> dict:
 
 @router.post("/chat", summary="对话（核心入口）")
 def chat(body: ChatIn):
-    return _chat(body.question, body.mode)
+    return _chat(body.question, body.mode, history=body.history)
 
 
 @router.get("/chat", summary="对话（GET 版，便于 curl 演示）")
