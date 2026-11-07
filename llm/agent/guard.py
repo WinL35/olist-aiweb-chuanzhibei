@@ -70,10 +70,17 @@ _PCT = re.compile(r"(提高|提升|上调|涨价|降低|下调|降价|下降)[^\
 _ANY_PCT = re.compile(r"(\d+(?:\.\d+)?)\s*%")
 
 # SQL 白名单（只允许查视图，且禁止写操作）
+# 与 olist_db 实际存在的 10 个视图保持一致（2026-11-07 实测核对）：
+#   v_category_sales       品类销售聚合      v_monthly_sales      月度销售
+#   v_order_master         订单主表（明细级）  v_order_sales_detail 订单-商品明细
+#   v_customer_geo         客户地域          v_geo_summary        地区汇总
+#   v_customer_segment     客户分层          v_seller_performance 卖家绩效
+#   v_payment_analysis     支付分析          v_delivery_performance 交付绩效
 ALLOWED_VIEWS = {
-    "v_category_sales", "v_monthly_sales", "v_order_funnel",
-    "v_customer_rfm", "v_seller_performance", "v_payment_dist",
-    "v_review_summary", "v_region_sales", "v_product_sales", "v_delivery_perf",
+    "v_category_sales", "v_monthly_sales", "v_order_master",
+    "v_order_sales_detail", "v_customer_geo", "v_geo_summary",
+    "v_customer_segment", "v_seller_performance", "v_payment_analysis",
+    "v_delivery_performance",
 }
 _FORBIDDEN_SQL = re.compile(
     r"\b(insert|update|delete|drop|alter|truncate|create|grant|revoke|replace)\b"
