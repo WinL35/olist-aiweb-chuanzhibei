@@ -12,6 +12,28 @@ import sys
 from pathlib import Path
 
 BASE = Path(__file__).resolve().parent
+
+
+def _load_dotenv(path: Path) -> None:
+    """极简 .env 加载器：KEY=VALUE 逐行读入 os.environ，不依赖 python-dotenv。
+
+    规则：忽略空行与 # 注释；不覆盖已存在的环境变量（命令行优先于 .env）；
+    值两端的引号会被去掉。.env 已被 .gitignore 排除，不会进仓库。
+    """
+    if not path.exists():
+        return
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, val = line.partition("=")
+        key, val = key.strip(), val.strip().strip('"').strip("'")
+        if key and key not in os.environ:
+            os.environ[key] = val
+
+
+_load_dotenv(BASE / ".env")  # 先加载 .env，再做任何依赖环境变量的初始化
+
 os.chdir(BASE)          # uvicorn 需要以项目根目录为工作目录
 sys.path.insert(0, str(BASE))
 
