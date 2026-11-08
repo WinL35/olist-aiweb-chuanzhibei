@@ -48,3 +48,9 @@ _check.js
 
 # ---- WorkBuddy 本地配置（项目助手的工作日志，与代码无关） ----
 .workbuddy/
+
+# ---- 技术文档 PDF 构建临时产物（源文件为 文档/技术文档.md + 文档/_print.css） ----
+_技术文档.html
+_doc_check.html
+_mkpdf.js
+_shot2.js

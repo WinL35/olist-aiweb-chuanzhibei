@@ -1,0 +1,37 @@
+# 构建镜像时排除的内容（数据传输走 git / 挂载，不打进镜像）
+.git
+.gitignore
+.workbuddy
+.env
+.env.local
+.env.*.local
+*_key.txt
+
+# 大数据（用挂载或导入脚本提供）
+cleaned/
+算法1/
+算法2/
+Dataset/
+*.db
+*.sql
+*.bak
+
+# 构建/会话临时产物
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+_probe_*
+_tmp_*
+_check.js
+_doc_check.html
+_技术文档.html
+_mkpdf.js
+_shot2.js
+*.log
+
+# 材料（体积大且与运行无关）
+答辩材料/
+归档/
+交付包/
+文档/截图/

@@ -1,18 +1,107 @@
-# Olist 电商经营分析与智能选品平台
+# Olist 电商经营决策垂直大模型
 
-基于 Olist Brazilian E-Commerce Public Dataset 的本地 Web 平台。系统将经营看板、RFM 用户分群、订单转化与复购、销量预测、选品建议、定价建议和离线模型评估整合到同一界面。
+> 第九届传智杯 · AI创新应用挑战赛（个人赛）· **选题 8：AI 数据分析与可视化**
+
+一个能「对话即分析」的电商经营决策系统：把 Olist 真实交易数据（99,441 订单 / 96,096 客户）
+接入大模型，用户用自然语言提问，系统自动**取数 → 分析 → 出图**，并且每个数字都带口径标注、
+每张图的数据都来自真实工具返回（不是模型编的）。
+
+除对话能力外，还包含经营看板、RFM 用户分群、转化漏斗与复购、销量预测、选品建议、
+定价建议、离线模型评估共 7 个页面，图表由 ECharts 渲染。
+
+**三条最能体现选题的验证路径**（评委可现场复现）：
+
+| 你会看到什么 | 怎么触发 |
+|---|---|
+| 一句话出一张图，数字不编 | 看板右下角浮窗 → 点「各品类GMV画柱状图」 |
+| 多轮追问不失忆 | 上一步之后接着问「那第二名是谁？」 |
+| 图表数字可核对 | 对比 `GET /api/dashboard/category` 返回的 GMV，与图上的 y 值完全一致 |
+
+## 10 分钟极速复现（官方要求的复现指南）
+
+> 环境：Windows / macOS / Linux 均可，需要 **Python 3.10+** 与 **MySQL 8.0+**。
+> 无需 GPU，无需 Docker，无需联网调模型也能跑（离线兜底引擎）。
+
+**① 装依赖（1 分钟）**
+
+```bash
+python -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+依赖清单（`requirements.txt`，全部为纯 Python 包，无编译依赖）：
+fastapi / uvicorn[standard] / PyMySQL / pandas / numpy / scikit-learn / requests。
+
+**② 配环境变量（1 分钟）**
+
+```bash
+cp .env.example .env      # Windows: copy .env.example .env
+```
+
+然后编辑 `.env`，最少改这两个：
+
+| 变量 | 必填 | 说明 |
+|---|---|---|
+| `MYSQL_PASSWORD` | ✅ | 本机 MySQL root 密码 |
+| `LLM_API_KEY` | 可选 | 不填则走离线确定性引擎（界面会明确标注） |
+
+其余变量（`MYSQL_HOST/PORT/USER/DB`、`LLM_BASE_URL`、`LLM_MODEL`、`LLM_TEMPERATURE`、
+`LLM_MAX_STEPS` 等）均有默认值，模板里有注释说明。`.env` 已在 `.gitignore` 中，不会进仓库。
+
+**③ 导数据（5 分钟，一次性）**
+
+```bash
+python 一键导入主库.py       # 建 olist_db（23 表），导入 cleaned/ 下 13 个 csv
+python 一键导入算法库.py     # 建 olist_algo_db（9 表）+ 主库 10 个视图
+```
+
+> 仓库不含 128MB 的 `cleaned/` 与原始数据（体积原因）。获取方式见
+> [文档/数据集说明.md](文档/数据集说明.md)；或直接把 `cleaned/*.csv` 放回项目根目录。
+
+**④ 启动（30 秒）**
+
+```bash
+python 启动后端.py
+```
+
+浏览器打开 `http://127.0.0.1:8000/`，右下角点开紫色浮窗即可对话；
+独立分析页 `http://127.0.0.1:8000/assistant.html`；接口文档 `http://127.0.0.1:8000/docs`。
+
+**⑤ 自检（30 秒）**
+
+```bash
+python scripts/smoke_test.py    # 接口连通性与响应时间
+python scripts/llm_smoke.py     # 大模型层 14 项冒烟（含护栏、出图、端到端）
+```
+
+两个脚本都会在失败时明确报错，不会伪造通过。
+
+**（可选）用 Docker 跑**
+
+```bash
+docker compose up -d                                   # MySQL + 应用
+docker compose run --rm app python 一键导入主库.py       # 首次导数据
+docker compose run --rm app python 一键导入算法库.py
+```
+
+> 提供 `Dockerfile` 与 `docker-compose.yml`（MySQL 映射到宿主机 3307，避免与本地 3306 冲突）。
+> 说明：本机无 Docker 环境，该配置**未做实际构建验证**，仅按标准语法编写；
+> 推荐用上面的 pip 方式复现（已验证）。
 
 ## 交付物速查
 
 | 要看什么 | 打开 |
 |---|---|
 | 提交前核对清单 | [提交材料/提交清单.md](提交材料/提交清单.md) |
-| 三分钟跑起来 | 本文件「初始化数据」「启动与验收」两节 |
-| 数据来源与口径 | [文档/数据集说明.md](文档/数据集说明.md) |
+| AI 协同过程（Prompt 快照） | [文档/Prompt快照.md](文档/Prompt快照.md) |
+| 技术文档 | [文档/技术文档.md](文档/技术文档.md) |
+| 数据来源与口径 | [文档/数据集说明.md](文档/数据集说明.md)、[文档/口径手册.md](文档/口径手册.md) |
 | 算法怎么做的 | [文档/算法1_算法文档.md](文档/算法1_算法文档.md)、[文档/算法2_算法文档.md](文档/算法2_算法文档.md) |
 | 系统全貌 | [文档/项目文档.md](文档/项目文档.md) |
-| 演示视频（4 分 53 秒） | [B 站 BV1tH4P6ZETk](https://www.bilibili.com/video/BV1tH4P6ZETk)（二维码在申报书附录） |
-| 答辩 PPT（10 页，**旧版**） | `答辩材料/答辩PPT.pptx`（仍是题目一版本，决赛前需重做） |
+| 大模型层设计 | [文档/垂直大模型方案.md](文档/垂直大模型方案.md) |
+| 评测结果 | [文档/评测报告.md](文档/评测报告.md) |
+| 各类取证截图 | `文档/截图/`（对话出图、浮窗、页面入口） |
 | 自测与复检记录 | [文档/验收记录.md](文档/验收记录.md) |
 
 ## 目录说明
@@ -24,10 +113,17 @@
 ├─ 一键导入主库.py         入口：建库建表并导入 cleaned/*.csv
 ├─ 一键导入算法库.py       入口：建算法库(9表)+主库视图(10个)，不需要 mysql 命令行
 ├─ config.py              全局配置（数据库连接、目录常量）
-├─ app/                   Web 层：FastAPI，33 个 GET 接口、5 个路由模块
+├─ .env.example           环境变量模板（复制为 .env 使用，.env 已 gitignore）
+├─ app/                   Web 层：FastAPI，44 个接口、5 个路由模块
 │    ├─ main.py           应用装配、静态资源挂载、CORS
 │    ├─ db.py             数据库连接池与查询封装
+│    ├─ llm_api.py        大模型层接口（chat / health / tools / eval / feedback）
 │    └─ dashboard/analysis/pricing/experiment/selection.py   五个路由模块
+├─ llm/                   大模型层（详见下文「垂直行业大模型层」）
+│    ├─ agent/            planner（ReAct）、prompts、guard（三重护栏）、composer
+│    ├─ tools/            registry（23 个工具 schema）、executor、chart（出图）
+│    ├─ knowledge/        33 条口径规则 + 239 段 RAG
+│    └─ eval/             60 题主集 + 20 题盲测
 ├─ pipeline/              离线流水线：数据清洗 + 算法模型 + 数据导入
 │    ├─ clean_merge.py            原始 Dataset/*.csv → cleaned/*.csv（预处理）
 │    ├─ algo1_model.py            RFM / K-Means / 漏斗 / 复购
@@ -36,7 +132,10 @@
 │    ├─ import_algo2.py           算法2 CSV → SQLite
 │    ├─ export_algo_to_mysql.py   SQLite → MySQL（olist_algo_db）
 │    └─ load_mysql.py             建表 + cleaned CSV → olist_db
-├─ static/                前端：Vue 3 + ECharts（7 页 / 21 图，依赖已本地化）
+├─ static/                前端：Vue 3 + ECharts（8 页 / 21 图，依赖已本地化）
+│    ├─ index.html        经营看板（7 个视图页，右下角对话浮窗）
+│    ├─ assistant.html    独立对话工作台
+│    └─ assets/ai-widget.js  看板内嵌浮窗（对话 + 出图 + 导出）
 ├─ cleaned/               清洗后的 13 张业务数据表（128 MB）
 ├─ 算法1/、算法2/           模型结果 CSV
 └─ *.sql、olist_algo.db    建表脚本、完整数据泵、算法库 SQLite
@@ -124,48 +223,75 @@ Olist 不包含浏览、加购行为，因此“转化分析”采用订单状�
 ## 垂直行业大模型层（llm/）
 
 在原有"分析 → 算法 → 页面"三层之上，新增一层**经营决策助手**：
-用通用模型底座 + 行业口径 + 真实数据接口，回答老板会问的经营问题。
+用通用模型底座 + 行业口径 + 真实数据接口，回答老板会问的经营问题，**并且能把答案画成图**。
 
 ### 五层结构
 
 | 层 | 位置 | 内容 |
 |---|---|---|
-| 数据层 | `olist_db` / `olist_algo_db` | 13 表 10 视图 + 9 张算法结果表 |
+| 数据层 | `olist_db` / `olist_algo_db` | 23 表 10 视图 + 9 张算法结果表 |
 | 知识层 | `llm/knowledge/` | **33 条口径硬规则** + **239 段文档 RAG**（TF-IDF，零依赖） |
-| 工具层 | `llm/tools/` | **22 个** function calling 工具，复用 `app/` 路由函数 |
+| 工具层 | `llm/tools/` | **23 个** function calling 工具（22 查询 + 1 出图），复用 `app/` 路由函数 |
 | 决策层 | `llm/agent/` | ReAct 编排 / 离线确定性组装 + **三重护栏** |
 | 评测层 | `llm/eval/` | 60 题主集 + 20 题盲测 × 4 种消融模式 |
+
+### 对话式分析与可视化（选题 8 的核心）
+
+一条问题走完三步，全程可追溯：
+
+```
+用户提问
+  → [ReAct step1] 模型选择查询工具，如 dashboard_category
+  → [ReAct step2] 模型调用 render_chart(chart_type, data_from, x_field, y_fields)
+  → [ReAct step3] 模型基于工具真实返回撰写结论，图与文字一起返回前端
+```
+
+**图表防幻觉的关键设计**：`render_chart` 的参数里**没有数据字段**，只有「画什么」——
+`data_from` 指定用哪个工具的既成结果，后端从本轮上下文里取原始返回做确定性转换。
+所以模型无法编造数值；且若 `data_from` 本轮没被调用过，工具直接返回错误。
+图注还会自动标注口径编号（如「GMV = Σ 商品单价，不含运费（GMV-01）」）。
+
+两条前端入口：
+
+| 入口 | 定位 | 能力 |
+|---|---|---|
+| 看板右下角浮窗（`static/assets/ai-widget.js`） | 边看图边随手问 | 对话、出图、多轮追问、导出 PNG/CSV |
+| 独立分析页 `assistant.html` | 完整分析工作台 | 上述全部 + 取数轨迹面板、口径/依据侧栏、消融模式切换、👍👎 反馈 |
 
 ### 启动
 
 ```bash
-python -m uvicorn app.main:app --reload --port 8000
+python 启动后端.py
 ```
 
 | 地址 | 说明 |
 |---|---|
-| http://127.0.0.1:8000/assistant | 对话页面（独立页面，不影响原有 7 个页面） |
+| http://127.0.0.1:8000/ | 经营看板（右下角带对话浮窗） |
+| http://127.0.0.1:8000/assistant.html | 独立对话页面（完整工作台） |
 | http://127.0.0.1:8000/docs | 接口文档（含 `/api/llm/*`） |
 
-### 接入真实模型底座（可选）
+### 接入真实模型底座
 
-不配置也能跑——此时走**离线确定性引擎**，回答里会明确标注。
-配置任一 OpenAI 兼容模型即可切换到 LLM 路径：
+不配置也能跑——此时走**离线确定性引擎**，回答里会明确标注 `provider=offline`。
+配置任一 OpenAI 兼容模型即可切换到 LLM 路径（DeepSeek / Qwen / GLM / vLLM / Ollama 均可）：
 
 ```bash
-export LLM_API_KEY=sk-xxx
-export LLM_BASE_URL=https://api.deepseek.com/v1   # 或 Qwen/GLM/vLLM/Ollama
-export LLM_MODEL=deepseek-chat
+# 写进 .env 即可，启动时自动加载（不必 export）
+LLM_API_KEY=sk-xxx
+LLM_BASE_URL=https://api.deepseek.com/v1
+LLM_MODEL=deepseek-chat
 ```
+
+验证是否真的接通：`GET /api/llm/health` 应返回 `"provider":"openai_compat"` 且 `"has_api_key":true`。
 
 ### 主要接口
 
 | 接口 | 作用 |
 |---|---|
-| `POST /api/llm/chat` | 对话（核心），body `{"question": "...", "mode": "full"}` |
+| `POST /api/llm/chat` | 对话（核心），body `{"question":"...","mode":"full","history":[...]}` |
 | `GET /api/llm/chat?q=...` | 同上，GET 版便于 curl 演示 |
-| `GET /api/llm/health` | 各层就绪状态 |
-| `GET /api/llm/tools` | 22 个工具清单 |
+| `GET /api/llm/health` | 各层就绪状态（provider / 工具数 / RAG / 规则数） |
+| `GET /api/llm/tools` | 23 个工具清单 |
 | `GET /api/llm/rules` | 33 条口径规则 |
 | `GET /api/llm/examples` | 示例问题（前端快捷按钮） |
 | `GET /api/llm/eval/run?limit=8` | 在线跑一小批评测 |
@@ -198,8 +324,13 @@ python scripts/run_eval.py --blind   # 盲测集
   不可当作大模型能力指标；
 - 主评测集 100% 属**自出题自评分**，会过拟合；盲测集第一次为 **75%**，
   失败的 5 题全是意图路由问题，这才是真实泛化下界；
+- **当前版本已接入 DeepSeek（`deepseek-chat`）并实测通过**，但上一版 `文档/评测报告.md`
+  的数字是在离线引擎下跑的，两者不可混为一谈；接入真模型后的复测结论以文首三条验证路径为准；
+- 图表数字由后端从工具返回确定性组装，**模型不参与数值生成**；
+  `render_chart` 若指定的数据源本轮未被调用会直接报错，这是刻意设计的防编造机制；
 - 未做参数微调（LoRA），口径靠 prompt 注入与检索，原因与触发条件见
-  [垂直大模型方案.md](文档/垂直大模型方案.md) 第八节。
+  [垂直大模型方案.md](文档/垂直大模型方案.md) 第八节；
+- 数据为巴西 Olist 公开数据集，货币单位为 BRL，业务结论**不可直接套用于国内平台**。
 
 详见 [垂直大模型方案.md](文档/垂直大模型方案.md)、[口径手册.md](文档/口径手册.md)、
 [评测报告.md](文档/评测报告.md)。
