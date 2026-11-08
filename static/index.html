@@ -17,6 +17,9 @@
         <span class="ai-txt">智能问答助手<em>对话式分析 · 可出图</em></span>
       </a>
       <nav>
+        <a href="/assistant.html" class="nav-ai" title="打开智能问答助手（对话式分析，可出图）">
+          <span class="ico">💬</span>智能问答助手
+        </a>
         <a v-for="m in menus" :key="m.key" :class="{active: view===m.key}" @click="view=m.key">
           <span class="ico">{{ m.ico }}</span>{{ m.name }}
         </a>

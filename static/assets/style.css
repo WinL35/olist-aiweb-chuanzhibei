@@ -37,6 +37,13 @@ nav a {
 nav a:hover { background: rgba(47,155,255,.08); color: var(--txt); }
 nav a.active { background: rgba(47,155,255,.14); color: #fff; border-left-color: var(--accent); }
 nav a .ico { font-size: 17px; }
+/* 导航里的智能问答助手入口：渐变文字 + 细描边，排在菜单第一项 */
+nav a.nav-ai {
+  color: #cdd8ff; border-left-color: transparent;
+  background: linear-gradient(90deg, rgba(37,99,235,.18), rgba(124,58,237,.12));
+  border-bottom: 1px solid var(--border);
+}
+nav a.nav-ai:hover { background: linear-gradient(90deg, rgba(37,99,235,.32), rgba(124,58,237,.22)); color: #fff; }
 .side-foot { font-size: 11px; color: var(--txt2); padding: 14px 20px; line-height: 1.5; }
 
 /* 侧边栏顶部：智能问答助手入口（核心能力，必须一眼可见） */
