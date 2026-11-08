@@ -16,6 +16,22 @@
 from __future__ import annotations
 
 import os
+import sys
+from pathlib import Path
+
+# 先加载项目根目录的 .env（纯标准库实现），再读下面的 os.getenv。
+# 这样 scripts/run_eval.py、scripts/llm_smoke.py 等脚本也能自动读到 key，
+# 不必每次在命令行 export（也避免把密钥留在 shell history 里）。
+# 说明：直接把根目录塞进 sys.path，避免「从 scripts/ 下运行」时 import 不到 envload。
+try:
+    _ROOT = Path(__file__).resolve().parent.parent
+    if str(_ROOT) not in sys.path:
+        sys.path.insert(0, str(_ROOT))
+    from envload import load_dotenv as _load_dotenv
+
+    _load_dotenv(_ROOT / ".env")
+except Exception:
+    pass
 
 # ---------------- 底座模型 ----------------
 API_KEY = os.getenv("LLM_API_KEY") or os.getenv("OPENAI_API_KEY") or ""

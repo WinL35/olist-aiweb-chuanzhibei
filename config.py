@@ -12,6 +12,12 @@
 """
 import os
 
+# 先加载 .env，再做任何 os.getenv —— 保证脚本与 Web 服务读到同一份配置
+try:
+    import envload  # noqa: F401  （import 即生效）
+except Exception:  # 极端情况下（如从别处拷贝单文件）不影响离线运行
+    pass
+
 # 项目根目录（本文件所在目录）
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
