@@ -1,0 +1,178 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef } from "react";
+
+import { FluidTooltipEngine } from "./fluid-tooltip-engine";
+import {
+  BrandMark,
+  IconChat,
+  IconDashboard,
+  IconFlask,
+  IconFunnel,
+  IconTag,
+  IconTarget,
+  IconTrendUp,
+  IconUsers,
+} from "./icons";
+
+/**
+ * 侧栏导航（流体提示气泡版）
+ * ============================
+ *
+ * 相比旧版的三个变化：
+ *   1. emoji → 线性矢量图标（跨平台字形一致，可继承 currentColor）；
+ *   2. 常驻文字标签 → 悬停/聚焦才出现的共享胶囊；
+ *   3. 每个按钮各自弹气泡 → 一个胶囊纵向滑行，文字被裁切显现。
+ *
+ * 快捷键 ⌘1…⌘8 是**真实生效**的（见下方 keydown），不是画上去的装饰，
+ * 因为"提示写着 ⌘3 但按了没反应"比没有提示更糟。
+ */
+
+export interface NavItem {
+  key: string;
+  name: string;
+  hint: string;
+  Icon: () => JSX.Element;
+}
+
+/** 7 个数据页 + 1 个对话入口（底部圆形位） */
+export const NAV_ITEMS: NavItem[] = [
+  { key: "dashboard", name: "经营看板", hint: "⌘1", Icon: IconDashboard },
+  { key: "rfm", name: "用户分群", hint: "⌘2", Icon: IconUsers },
+  { key: "conversion", name: "转化分析", hint: "⌘3", Icon: IconFunnel },
+  { key: "prediction", name: "销量预测", hint: "⌘4", Icon: IconTrendUp },
+  { key: "recommend", name: "选品建议", hint: "⌘5", Icon: IconTag },
+  { key: "pricing", name: "定价建议", hint: "⌘6", Icon: IconTarget },
+  { key: "experiment", name: "模型实验", hint: "⌘7", Icon: IconFlask },
+  { key: "assistant", name: "智能问答", hint: "⌘8", Icon: IconChat },
+];
+
+export function FluidNav() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const panelRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef<Array<HTMLAnchorElement | null>>([]);
+
+  const activeKey = pathname.split("/")[1] || "dashboard";
+
+  /** 供引擎使用的纯数据（不含 React 元素，避免引擎触碰 JSX） */
+  const engineItems = useMemo(
+    () => NAV_ITEMS.map((n) => ({ id: n.key, label: n.name, hint: n.hint })),
+    []
+  );
+
+  useEffect(() => {
+    const panel = panelRef.current;
+    const buttons = itemRefs.current.filter(Boolean) as HTMLAnchorElement[];
+    if (!panel || buttons.length !== NAV_ITEMS.length) return;
+
+    const engine = new FluidTooltipEngine({
+      panel,
+      items: engineItems,
+      buttons,
+      capsuleHeight: 64,
+      offsetX: 108, // 按钮右边缘（24 内边距 + 84 宽）+ 20 留白
+    });
+
+    return () => engine.destroy();
+  }, [engineItems]);
+
+  /**
+   * 真实快捷键：Meta / Ctrl + 1…8 → 对应页面。
+   * 输入框内不拦截，否则会在文本框里误触发跳转。
+   */
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey)) return;
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable)
+        return;
+      const n = Number(e.key);
+      if (!Number.isInteger(n) || n < 1 || n > NAV_ITEMS.length) return;
+      e.preventDefault();
+      router.push(`/${NAV_ITEMS[n - 1].key}`);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [router]);
+
+  return (
+    <div className="flex h-full min-h-0">
+      {/*
+        油画窄条：纯装饰，aria-hidden。
+        background-position 偏左是因为 cover 之后画面被横向裁掉大半，
+        取左侧才能同时留下天空、雪山、湖水和前景石头四层。
+      */}
+      <div
+        aria-hidden
+        className="hidden w-[56px] shrink-0 bg-cover bg-no-repeat sm:block"
+        style={{
+          backgroundImage: "url(/nav-art.webp)",
+          backgroundPosition: "8% center",
+          filter: "saturate(.94) brightness(.9)",
+        }}
+      />
+
+      {/* 深灰面板：不透明实心，完全盖住油画，只在左缘留一条 2px 细线做分隔 */}
+      <div
+        ref={panelRef}
+        className="relative flex min-h-0 flex-1 flex-col bg-[#35363a]"
+        style={{ boxShadow: "inset 2px 0 0 rgba(255,255,255,.12), -20px 0 46px rgba(0,0,0,.19)" }}
+      >
+        {/* 静态颗粒：极低不透明度，只为了让纯色面板不显得"塑料" */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 z-10"
+          style={{
+            backgroundImage:
+              "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' seed='17' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.024'/%3E%3C/svg%3E\")",
+          }}
+        />
+
+        <nav
+          aria-label="主导航"
+          className="nav-scroll flex min-h-0 flex-1 flex-col items-center gap-[9px] overflow-y-auto py-7"
+        >
+          {NAV_ITEMS.slice(0, 7).map((item, i) => {
+            const isActive = activeKey === item.key;
+            return (
+              <Link
+                key={item.key}
+                href={`/${item.key}`}
+                ref={(el) => {
+                  itemRefs.current[i] = el;
+                }}
+                aria-label={item.name}
+                aria-current={isActive ? "page" : undefined}
+                data-active={isActive || undefined}
+                className="nav-btn group relative flex h-[84px] w-[84px] shrink-0 items-center justify-center rounded-[28px] text-white/80 outline-none transition-[background-color,color] duration-[130ms] hover:bg-white/[.025] hover:text-white data-[active]:bg-white/[.11] data-[active]:text-white focus-visible:ring-[3px] focus-visible:ring-[#e9edf7] focus-visible:ring-offset-[5px] focus-visible:ring-offset-[#35363a]"
+              >
+                <span className="h-[34px] w-[34px]">
+                  <item.Icon />
+                </span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* 底部圆形位：白底 + 黑色镂空徽标，视觉上与上方图标列区分开 */}
+        <div className="flex shrink-0 flex-col items-center pb-7">
+          <Link
+            href="/assistant"
+            ref={(el) => {
+              itemRefs.current[7] = el;
+            }}
+            aria-label={NAV_ITEMS[7].name}
+            aria-current={activeKey === "assistant" ? "page" : undefined}
+            data-active={activeKey === "assistant" || undefined}
+            className="nav-btn flex h-[66px] w-[66px] items-center justify-center rounded-full bg-white p-[15px] text-[#111] outline-none transition-[box-shadow] duration-[130ms] hover:shadow-[0_0_0_3px_rgba(255,255,255,.18)] focus-visible:ring-[3px] focus-visible:ring-[#e9edf7] focus-visible:ring-offset-[5px] focus-visible:ring-offset-[#35363a]"
+          >
+            <BrandMark />
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}

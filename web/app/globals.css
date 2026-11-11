@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-canvas font-sans text-fg antialiased;
+  }
+
+  /* 滚动条与旧版保持一致的低干扰风格 */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #2a3650;
+    border-radius: 8px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #3a4a68;
+  }
+
+  /* 数字统一等宽对齐，表格和指标卡不会跳动 */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-card border border-line bg-surface;
+  }
+
+  .card-star {
+    @apply card relative overflow-hidden;
+  }
+  .card-star::before {
+    content: "";
+    @apply pointer-events-none absolute inset-x-0 top-0 h-px;
+    background: linear-gradient(90deg, transparent, rgba(47, 155, 255, 0.45), transparent);
+  }
+
+  .chip {
+    @apply cursor-pointer rounded-full border border-line bg-surface2 px-3 py-1.5 text-xs text-[#cfe0f7] transition-colors hover:border-accent hover:text-white;
+  }
+
+  .btn-primary {
+    @apply rounded-[10px] bg-accent px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-45;
+  }
+
+  .btn-ghost {
+    @apply rounded-lg border border-line px-3 py-1.5 text-xs text-muted transition-colors hover:border-accent hover:text-fg;
+  }
+
+  /* 正文 markdown 渲染（对话气泡内） */
+  .prose-chat {
+    @apply text-[13.5px] leading-[1.75];
+  }
+  .prose-chat h4 {
+    @apply mb-1.5 mt-3 text-[13px] font-semibold text-accent;
+  }
+  .prose-chat h4:first-child {
+    @apply mt-0;
+  }
+  .prose-chat ul {
+    @apply my-1 list-outside list-disc pl-5;
+  }
+  .prose-chat li {
+    @apply my-0.5;
+  }
+  .prose-chat strong {
+    @apply font-semibold text-white;
+  }
+}
+
+/* 流式输出的光标 */
+.stream-caret::after {
+  content: "▍";
+  @apply ml-0.5 inline-block text-accent;
+  animation: caret 1s step-end infinite;
+}
+
+/* ---- 侧栏图标列：滚动条在深灰面板上太扎眼，隐藏滚动条但保留滚动能力 ---- */
+.nav-scroll {
+  scrollbar-width: none;
+}
+.nav-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* 图标统一继承按钮的 currentColor，选中/悬停时随之变化 */
+.nav-btn svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
