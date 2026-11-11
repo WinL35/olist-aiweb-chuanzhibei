@@ -31,9 +31,14 @@ llm/feedback/*.db
 cleaned/
 算法1/
 算法2/
-Olist_Views.sql
-olist_algo_mysql.sql
-schema.sql
+
+# ---- 建表脚本：必须入库，禁止忽略 ----
+# 评委复现依赖这三个脚本，少任何一个都无法建库：
+#   schema.sql            → 主库 olist_db    13 张表
+#   Olist_Views.sql       → 主库 olist_db    10 个视图
+#   olist_algo_mysql.sql  → 算法库 olist_algo_db 9 张表（含算法结果数据）
+# 例外：Olist.sql 是全量原始数据导出（151 MB），不入库，见 README「数据准备」
+# ⚠️ 不要在这里写 schema.sql / Olist_Views.sql / olist_algo_mysql.sql
 
 # ---- 会话临时工件 ----
 _memory_.ses
@@ -56,3 +61,11 @@ _mkpdf.js
 _shot2.js
 _doc.html
 _pdf.log
+
+# ---- Next.js 前端（web/） ----
+web/node_modules/
+web/.next/
+web/out/
+web/next-env.d.ts
+web/.turbo/
+web/npm-debug.log*
