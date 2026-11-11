@@ -46,5 +46,5 @@ ALGO_DB_CONFIG = {**DB_CONFIG, "database": ALGO_DB}
 # ---------------- 目录 ----------------
 # 清洗后的 csv（load_mysql.py 的输入）
 CLEANED_DIR = os.path.join(BASE_DIR, "cleaned")
-# 前端静态文件（index.html + assets/）
-STATIC_DIR = os.path.join(BASE_DIR, "static")
+# 说明：前端已迁至独立 Next.js 应用（web/），本服务不再托管静态页面，
+# 故原先的 STATIC_DIR 已移除。

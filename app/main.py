@@ -13,8 +13,7 @@ from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 # 让 `import config` 能命中项目根目录的 config.py
@@ -98,45 +97,19 @@ def health():
     return out
 
 
-# ---------------- 静态前端 ----------------
-if os.path.isdir(config.STATIC_DIR):
-    app.mount("/assets",
-              StaticFiles(directory=os.path.join(config.STATIC_DIR, "assets")),
-              name="assets")
+# ---------------- 前端入口 ----------------
+# 前端是与本服务分离的 Next.js 14 应用（web/，默认 3000 端口），本服务只提供 /api/*。
+# 旧版 static/（Vue 3 CDN + 手写 HTML）已于本次重构中移除，功能全部迁至 web/。
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://127.0.0.1:3000")
 
 
 @app.get("/", include_in_schema=False)
 def index():
-    p = os.path.join(config.STATIC_DIR, "index.html")
-    if os.path.exists(p):
-        return FileResponse(p)
-    return {"message": "前端尚未部署，后端 API 可用，接口文档见 /docs"}
-
-
-@app.get("/assistant", include_in_schema=False)
-def assistant():
-    """垂直大模型对话页（独立页面，不并入主 SPA）。"""
-    p = os.path.join(config.STATIC_DIR, "assistant.html")
-    if os.path.exists(p):
-        return FileResponse(p)
-    return {"message": "对话页未部署，接口可用：/api/llm/chat"}
-
-
-@app.get("/{full_path:path}", include_in_schema=False)
-def spa(full_path: str):
-    """SPA 兜底：未知路径一律返回 index.html。
-
-    ⚠️ 安全：路径参数可能是 URL 编码的穿越序列（如 %2e%2e%2f → ../），
-    直接 join 会把静态目录之外的源码/配置文件读出去（实测可读 config.py）。
-    必须用 realpath 归一化后校验仍位于 STATIC_DIR 内，否则回退 index.html。
-    """
-    root = os.path.realpath(config.STATIC_DIR)
-    if full_path:
-        p = os.path.realpath(os.path.join(root, full_path))
-        # 仅允许 STATIC_DIR 内部的文件（含 root 本身之下的任意深度）
-        if p.startswith(root + os.sep) and os.path.isfile(p):
-            return FileResponse(p)
-    idx = os.path.join(root, "index.html")
-    if os.path.exists(idx):
-        return FileResponse(idx)
-    return {"message": "not found"}
+    """根路径给出入口指引：本服务是纯 API，界面在 Next.js 侧。"""
+    return {
+        "service": "Olist 电商经营决策垂直大模型 · API",
+        "docs": "/docs",
+        "health": "/api/health",
+        "frontend": FRONTEND_URL,
+        "hint": "界面为独立 Next.js 应用，请访问 frontend 地址；本服务仅提供 /api/* 接口",
+    }

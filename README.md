@@ -62,11 +62,20 @@ python 一键导入算法库.py     # 建 olist_algo_db（9 表）+ 主库 10 �
 **④ 启动（30 秒）**
 
 ```bash
+# 终端 1：后端 API（FastAPI，8000 端口）
 python 启动后端.py
+
+# 终端 2：Web 前端（Next.js 14，3000 端口）
+cd web
+npm install          # 首次运行
+npm run dev          # 开发模式；演示可用 npm run build && npm start
 ```
 
-浏览器打开 `http://127.0.0.1:8000/`，右下角点开紫色浮窗即可对话；
-独立分析页 `http://127.0.0.1:8000/assistant.html`；接口文档 `http://127.0.0.1:8000/docs`。
+浏览器打开 **`http://127.0.0.1:3000/`** —— Next.js App Router 主界面。
+
+> 旧版静态页仍保留在 `http://127.0.0.1:8000/`（Vue CDN 实现，作为技术演进对照），
+> 接口文档在 `http://127.0.0.1:8000/docs`。
+> 前端默认连 `http://127.0.0.1:8000`，如后端换了地址，用 `PY_API_BASE` 环境变量覆盖。
 
 **⑤ 自检（30 秒）**
 
@@ -133,13 +142,20 @@ docker compose run --rm app python 一键导入算法库.py
 │    ├─ import_algo2.py           算法2 CSV → SQLite
 │    ├─ export_algo_to_mysql.py   SQLite → MySQL（olist_algo_db）
 │    └─ load_mysql.py             建表 + cleaned CSV → olist_db
-├─ static/                前端：Vue 3 + ECharts（8 页 / 21 图，依赖已本地化）
-│    ├─ index.html        经营看板（7 个视图页，右下角对话浮窗）
-│    ├─ assistant.html    独立对话工作台
-│    └─ assets/ai-widget.js  看板内嵌浮窗（对话 + 出图 + 导出）
-├─ cleaned/               清洗后的 13 张业务数据表（128 MB）
-├─ 算法1/、算法2/           模型结果 CSV
-└─ *.sql、olist_algo.db    建表脚本、完整数据泵、算法库 SQLite
+├─ web/                   前端：Next.js 14 + React 18 + TS + Tailwind（8 个路由）
+│    ├─ app/              App Router：7 个看板页 + 对话页 + /api/chat 透传
+│    ├─ components/       图表（ECharts 按需）、UI 基元、对话组件、侧栏布局
+│    ├─ lib/              取数层、SSE 解析、ECharts 注册、格式化
+│    └─ types/api.ts      40 个后端接口的 TypeScript 类型定义
+├─ schema.sql             主库建表脚本（olist_db，13 表）← 复现必读
+├─ Olist_Views.sql        主库视图脚本（olist_db，10 个视图）← 复现必读
+├─ olist_algo_mysql.sql   算法库建表 + 结果数据（olist_algo_db，9 表）
+├─ cleaned/               清洗后的 13 张业务数据表（128 MB，由 pipeline 重建）
+├─ 算法1/、算法2/           模型结果 CSV（由 pipeline 重建）
+└─ Olist.sql              全量原始数据导出（151 MB，体积过大不入库）
+
+> 建表链：`schema.sql` → `Olist.sql`/`cleaned/*.csv` → `Olist_Views.sql` → `olist_algo_mysql.sql`。
+> 前两个脚本已随仓库提供，clone 后无需下载 45 MB 原始数据即可建出空库结构。
 ```
 
 > 全部脚本均可在项目根目录用 `python pipeline/xxx.py` 直接运行；
@@ -220,6 +236,27 @@ python scripts/smoke_test.py
 Olist 不包含浏览、加购行为，因此“转化分析”采用订单状态和时间戳构建订单漏斗；它不是曝光到下单的行为漏斗。销量预测的真实离线结果及限制见 [算法2_算法文档.md](文档/算法2_算法文档.md)，不得将其表述为全面显著优于移动平均基线。
 
 ---
+
+## Web 前端（web/）
+
+技术栈：**Next.js 14（App Router）+ React 18 + TypeScript（strict）+ Tailwind CSS 3 + ECharts 5（按需引入）**
+
+| 能力 | 落地方式 | 位置 |
+|---|---|---|
+| 服务端组件 RSC | 看板各卡片在服务端取数，HTML 直出数字，不必等客户端 JS 水合 | `app/(shell)/dashboard/page.tsx` |
+| 流式渲染 | 每个数据块一个 `<Suspense>` 边界，谁先返回谁先刷新 | `components/dashboard/sections.tsx` |
+| Route Handler | 对话 SSE 逐块透传，避免代理层把事件攒成一包 | `app/api/chat/route.ts` |
+| 流式对话 | 阶段事件（护栏/口径/检索/工具）+ 正文按句落屏 | `llm/agent/streaming.py`、`lib/sse.ts` |
+| 类型安全 | 40 个后端接口全量建模，`tsc --noEmit` 零错误 | `types/api.ts` |
+| 样式体系 | 原子化 CSS，设计令牌与旧版色板同源 | `tailwind.config.ts` |
+
+路由：`/dashboard` `/rfm` `/conversion` `/prediction` `/recommend` `/pricing` `/experiment` `/assistant`
+
+三个刻意的取舍（也是答辩时值得讲的点）：
+
+1. **对话页是客户端组件**。多轮历史、流式增量、图表导出都依赖浏览器状态，放服务端没有收益。
+2. **图表配置对象放宽类型**。ECharts 官方类型对「运行时拼装 option」极不友好，在 `EChart` 入口统一断言；业务数据的类型仍然严格。
+3. **流式不是 token 级**。ReAct 必须先跑完工具调用才可能生成终稿，所以选择「真实推送过程进度 + 终稿按句落屏」，而不是伪造一个匀速打字机。理由写在 `llm/agent/streaming.py` 文件头。
 
 ## 垂直行业大模型层（llm/）
 
