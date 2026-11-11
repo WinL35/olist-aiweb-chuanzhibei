@@ -19,11 +19,12 @@ from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter, Query
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from llm import config as llm_config
 from llm import feedback
-from llm.agent import planner
+from llm.agent import planner, streaming
 from llm.knowledge import hard_rules
 from llm.tools import registry
 
@@ -100,6 +101,28 @@ def chat(body: ChatIn):
 def chat_get(q: str = Query(..., description="问题"),
              mode: Optional[str] = Query(None)):
     return _chat(q, mode)
+
+
+@router.post("/chat/stream", summary="对话（SSE 流式，前端主用）")
+def chat_stream(body: ChatIn):
+    """以 SSE 推送对话全过程。
+
+    事件序列：stage（护栏/口径/检索/工具）→ step（真实工具调用与耗时）
+    → delta（正文按句增量）→ result（完整结构化结果，含图表与引用）。
+
+    与 /chat 的关系：两者共用同一批工具与同一份口径库，结果等价；
+    /chat 供评测与 curl 使用，本接口供前端流式渲染使用。
+    """
+    return StreamingResponse(
+        streaming.sse(body.question, body.mode, history=body.history),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache, no-transform",
+            "Connection": "keep-alive",
+            # 关掉 nginx 等反代的响应缓冲，否则事件会被攒成一坨才下发
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 @router.get("/examples", summary="示例问题（前端快捷按钮）")
