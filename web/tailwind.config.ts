@@ -39,9 +39,9 @@ const config: Config = {
       borderRadius: {
         card: "14px",
       },
-      maxWidth: {
-        shell: "1560px",
-      },
+      // 说明：原先有 maxWidth.shell = 1560px，与 mx-auto 一起把内容居中。
+      // 屏幕超过 1656px（1560 + 侧栏 96）后左右各空出一大块，反馈"中间太窄、两边太宽"，
+      // 已改为内容撑满可用宽度，只保留 px-4/sm:px-6/lg:px-7 内边距。
       keyframes: {
         "fade-up": {
           "0%": { opacity: "0", transform: "translateY(6px)" },

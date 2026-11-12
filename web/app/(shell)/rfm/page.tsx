@@ -60,7 +60,7 @@ export default function RfmPage() {
   const activeHint = SCHEMES.find((s) => s.key === scheme)?.hint ?? "";
 
   return (
-    <div className="mx-auto min-w-0 max-w-shell px-4 py-5 sm:px-6 lg:px-7">
+    <div className="min-w-0 px-4 py-5 sm:px-6 lg:px-7">
       <PageHeader title="用户分群" desc="RFM 模型 + K-Means 聚类划分用户群体" />
 
       <div className="mb-4 flex flex-wrap items-center gap-2">

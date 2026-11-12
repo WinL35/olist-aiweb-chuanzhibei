@@ -26,7 +26,7 @@ export const metadata: Metadata = { title: "经营看板" };
  */
 export default function DashboardPage() {
   return (
-    <div className="mx-auto min-w-0 max-w-shell px-4 py-5 sm:px-6 lg:px-7">
+    <div className="min-w-0 px-4 py-5 sm:px-6 lg:px-7">
       <PageHeader title="经营看板" desc="巴西 Olist 电商数据集全量概览" />
 
       <Suspense

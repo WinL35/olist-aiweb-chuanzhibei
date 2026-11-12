@@ -19,7 +19,7 @@ export default async function RecommendPage() {
   const sel = selSummary.ok ? selSummary.data : null;
 
   return (
-    <div className="mx-auto min-w-0 max-w-shell px-4 py-5 sm:px-6 lg:px-7">
+    <div className="min-w-0 px-4 py-5 sm:px-6 lg:px-7">
       <PageHeader title="选品建议" desc="增长潜力品类推荐与离线策略对照评估" />
 
       <div className="mb-4">

@@ -15,7 +15,7 @@ export default async function ConversionPage() {
   const rp = repurchase.ok ? repurchase.data.data : [];
 
   return (
-    <div className="mx-auto min-w-0 max-w-shell px-4 py-5 sm:px-6 lg:px-7">
+    <div className="min-w-0 px-4 py-5 sm:px-6 lg:px-7">
       <PageHeader title="转化分析" desc="订单转化漏斗与复购情况" />
 
       {rp.length > 0 && (

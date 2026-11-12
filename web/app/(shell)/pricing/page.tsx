@@ -20,7 +20,7 @@ export default async function PricingPage() {
   const skip = skipped.ok ? skipped.data.data : [];
 
   return (
-    <div className="mx-auto min-w-0 max-w-shell px-4 py-5 sm:px-6 lg:px-7">
+    <div className="min-w-0 px-4 py-5 sm:px-6 lg:px-7">
       <PageHeader title="定价建议" desc="价格弹性分析与建议价格区间" />
 
       {s ? (

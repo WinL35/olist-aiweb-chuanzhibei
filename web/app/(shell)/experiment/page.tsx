@@ -19,7 +19,7 @@ export default async function ExperimentPage() {
   const rows = stats.ok ? stats.data.data.slice(0, 8) : [];
 
   return (
-    <div className="mx-auto min-w-0 max-w-shell px-4 py-5 sm:px-6 lg:px-7">
+    <div className="min-w-0 px-4 py-5 sm:px-6 lg:px-7">
       <PageHeader title="模型实验" desc="预测模型离线评估与基线对照 · 结果如实呈现，不做乐观修饰" />
 
       <div className="grid gap-4 lg:grid-cols-2">
