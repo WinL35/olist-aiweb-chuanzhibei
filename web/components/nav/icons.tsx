@@ -9,7 +9,7 @@
  *
  * 统一规范（与设计稿一致）：24×24 viewBox、fill:none、stroke:currentColor、
  * 圆端圆角（stroke-linecap/linejoin: round）、描边 1.6（在容器上用 CSS 控制，
- * 这样同一个图标在 84px 与 60px 两档尺寸下都能保持视觉重量一致）。
+ * 这样同一个图标在 23px 与 54px 两档尺寸下都能保持视觉重量一致）。
  */
 
 /** 所有图标的公共属性，避免 8 个文件重复写同一串。 */

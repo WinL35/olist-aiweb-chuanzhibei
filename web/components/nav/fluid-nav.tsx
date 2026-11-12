@@ -101,25 +101,14 @@ export function FluidNav() {
   return (
     <div className="flex h-full min-h-0">
       {/*
-        油画窄条：纯装饰，aria-hidden。
-        background-position 偏左是因为 cover 之后画面被横向裁掉大半，
-        取左侧才能同时留下天空、雪山、湖水和前景石头四层。
+        只保留深灰面板，不再有左侧装饰窄条。
+        原来那条 56px 油画在深色底上几乎看不出画意，反而被读成"左边空了一块"，
+        直接把宽度还给内容区更实在。右缘 2px 细线 + 外投影仍保留，用来和正文分层。
       */}
-      <div
-        aria-hidden
-        className="hidden w-[56px] shrink-0 bg-cover bg-no-repeat sm:block"
-        style={{
-          backgroundImage: "url(/nav-art.webp)",
-          backgroundPosition: "8% center",
-          filter: "saturate(.94) brightness(.9)",
-        }}
-      />
-
-      {/* 深灰面板：不透明实心，完全盖住油画，只在左缘留一条 2px 细线做分隔 */}
       <div
         ref={panelRef}
         className="relative flex min-h-0 flex-1 flex-col bg-[#35363a]"
-        style={{ boxShadow: "inset 2px 0 0 rgba(255,255,255,.12), -20px 0 46px rgba(0,0,0,.19)" }}
+        style={{ boxShadow: "inset -2px 0 0 rgba(255,255,255,.10), 20px 0 46px rgba(0,0,0,.19)" }}
       >
         {/* 静态颗粒：极低不透明度，只为了让纯色面板不显得"塑料" */}
         <div
@@ -149,7 +138,8 @@ export function FluidNav() {
                 data-active={isActive || undefined}
                 className="nav-btn group relative flex h-[84px] w-[84px] shrink-0 items-center justify-center rounded-[28px] text-white/80 outline-none transition-[background-color,color] duration-[130ms] hover:bg-white/[.025] hover:text-white data-[active]:bg-white/[.11] data-[active]:text-white focus-visible:ring-[3px] focus-visible:ring-[#e9edf7] focus-visible:ring-offset-[5px] focus-visible:ring-offset-[#35363a]"
               >
-                <span className="h-[34px] w-[34px]">
+                {/* 只缩小图标本体：按钮 84 / 圆角 28 / 间距 9 / 内边距 全部保持原值 */}
+                <span className="h-[26px] w-[26px]">
                   <item.Icon />
                 </span>
               </Link>
