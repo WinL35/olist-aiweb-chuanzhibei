@@ -44,14 +44,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/*
         侧栏在移动端是抽屉（可滑出），桌面端常驻。
-        宽度与 FluidNav 内部一致：132px（只有深灰面板，油画窄条已移除）。
+        宽度 108px：按钮 84px 居中，左右各留 12px。原先 132px 时两侧各 24px，
+        在深灰底上被读成"两头各空一块"，所以整体收窄。
+
+        ⚠️ 改这个宽度必须同步 fluid-nav.tsx 里的 offsetX（= 左边距 + 84 = 96），
+        否则悬停气泡会偏。
 
         ⚠️ 桌面端必须用 sticky + h-screen，不能用 static：
         根容器是 min-h-screen，看板内容很长，static 会让 aside 被拉到整页高度，
         于是"靠 flex-1 推到底部"的圆形入口会被推到几千像素之外。
       */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-[132px] shrink-0 transition-transform duration-200 lg:sticky lg:top-0 lg:bottom-auto lg:h-screen lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 w-[108px] shrink-0 transition-transform duration-200 lg:sticky lg:top-0 lg:bottom-auto lg:h-screen lg:translate-x-0 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
