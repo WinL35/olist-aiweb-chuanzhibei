@@ -44,10 +44,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/*
         侧栏在移动端是抽屉（可滑出），桌面端常驻。
-        宽度 108px：按钮 84px 居中，左右各留 12px。原先 132px 时两侧各 24px，
-        在深灰底上被读成"两头各空一块"，所以整体收窄。
+        宽度 96px：按钮 84px 居中，左右各留 6px。132 → 108 → 96 分三次收窄，
+        每次都只动面板，按钮尺寸始终是 84px。
 
-        ⚠️ 改这个宽度必须同步 fluid-nav.tsx 里的 offsetX（= 左边距 + 84 = 96），
+        ⚠️ 改这个宽度必须同步 fluid-nav.tsx 里的 offsetX（= 左边距 + 84 = 90），
         否则悬停气泡会偏。
 
         ⚠️ 桌面端必须用 sticky + h-screen，不能用 static：
@@ -55,7 +55,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         于是"靠 flex-1 推到底部"的圆形入口会被推到几千像素之外。
       */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-[108px] shrink-0 transition-transform duration-200 lg:sticky lg:top-0 lg:bottom-auto lg:h-screen lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 w-[96px] shrink-0 transition-transform duration-200 lg:sticky lg:top-0 lg:bottom-auto lg:h-screen lg:translate-x-0 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >

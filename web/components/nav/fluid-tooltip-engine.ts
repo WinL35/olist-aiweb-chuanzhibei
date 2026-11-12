@@ -138,7 +138,7 @@ export class FluidTooltipEngine {
     this.panel = opts.panel;
     this.items = opts.items;
     this.buttons = opts.buttons;
-    this.capsuleH = opts.capsuleHeight ?? 64;
+    this.capsuleH = opts.capsuleHeight ?? 56;
     this.offsetX = opts.offsetX ?? 128;
     this.reduced =
       opts.reducedMotion ??
@@ -176,6 +176,8 @@ export class FluidTooltipEngine {
     ].join(";");
 
     // ③ 每行内容：绝对定位，top 稍后按按钮中心算
+    // 内边距 / 间距 / 字号与胶囊高度配套（胶囊 56px：0.875 倍于旧的 64px 版）。
+    // 改 capsuleHeight 时这几个数要一起调，否则字会在胶囊里挤或飘。
     this.items.forEach((it) => {
       const row = document.createElement("div");
       row.style.cssText = [
@@ -185,15 +187,15 @@ export class FluidTooltipEngine {
         "display:flex",
         "align-items:center",
         "width:max-content",
-        "padding:0 26px",
-        "gap:14px",
+        "padding:0 22px",
+        "gap:12px",
         "white-space:nowrap",
       ].join(";");
 
       const label = document.createElement("span");
       label.textContent = it.label;
       label.style.cssText =
-        "font-size:26px;line-height:1;font-weight:600;letter-spacing:-.5px;color:#f2f2f3;" +
+        "font-size:23px;line-height:1;font-weight:600;letter-spacing:-.5px;color:#f2f2f3;" +
         "font-family:'Inter','Arial','Helvetica','Microsoft YaHei',sans-serif";
       row.appendChild(label);
 
@@ -201,8 +203,8 @@ export class FluidTooltipEngine {
         const hint = document.createElement("span");
         hint.textContent = it.hint;
         hint.style.cssText =
-          "font-size:22px;line-height:1;font-weight:600;letter-spacing:-.8px;color:#89898e;" +
-          "min-width:56px;text-align:right;" +
+          "font-size:19px;line-height:1;font-weight:600;letter-spacing:-.8px;color:#89898e;" +
+          "min-width:48px;text-align:right;" +
           "font-family:'Inter','Arial','Helvetica','Microsoft YaHei',sans-serif";
         row.appendChild(hint);
       }

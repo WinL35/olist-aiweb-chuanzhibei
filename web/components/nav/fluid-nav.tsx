@@ -72,10 +72,11 @@ export function FluidNav() {
       panel,
       items: engineItems,
       buttons,
-      capsuleHeight: 64,
-      // 胶囊左边缘 = 按钮左边距 + 按钮宽。侧栏 108px、按钮 84px → 左边距 12px → 96。
+      // 胶囊高 56（原 64）：与引擎内字号 23/19、内边距 22、间距 12 配套
+      capsuleHeight: 56,
+      // 胶囊左边缘 = 按钮左边距 + 按钮宽。侧栏 96px、按钮 84px → 左边距 6px → 90。
       // 改侧栏宽度时必须同步这里（见 app-shell.tsx 的 aside 宽度）。
-      offsetX: 96,
+      offsetX: 90,
     });
 
     return () => engine.destroy();
