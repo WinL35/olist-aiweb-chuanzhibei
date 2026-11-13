@@ -114,7 +114,7 @@ export default async function RecommendPage() {
                   <div key={s.name} className="rounded-lg border border-line bg-surface2/30 p-3">
                     <p className="mb-2 text-[12px] text-muted">
                       {s.name} → 命中率{" "}
-                      <b className={i === 0 ? "text-accent" : "text-mint"}>{pctRaw(s.hit_rate)}</b>
+                      <b className={i === 0 ? "text-accentInk" : "text-mint"}>{pctRaw(s.hit_rate)}</b>
                     </p>
                     <Table head={["品类", "训练期 GMV", "增长率"]} dense>
                       {s.recommended.map((d) => (

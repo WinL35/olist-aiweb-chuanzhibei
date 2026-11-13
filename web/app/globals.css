@@ -4,14 +4,14 @@
 
 @layer base {
   html {
-    color-scheme: dark;
+    color-scheme: light;
   }
 
   body {
     @apply bg-canvas font-sans text-fg antialiased;
   }
 
-  /* 滚动条与旧版保持一致的低干扰风格 */
+  /* 滚动条与浅色主题匹配 */
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -20,11 +20,11 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: #2a3650;
+    background: #ccd5e2;
     border-radius: 8px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #3a4a68;
+    background: #adbacd;
   }
 
   /* 数字统一等宽对齐，表格和指标卡不会跳动 */
@@ -44,11 +44,17 @@
   .card-star::before {
     content: "";
     @apply pointer-events-none absolute inset-x-0 top-0 h-px;
-    background: linear-gradient(90deg, transparent, rgba(47, 155, 255, 0.45), transparent);
+    /* 浅色底上 0.45 的蓝会像一道亮线，收到 0.22 才有"材质感"而不是"划痕" */
+    background: linear-gradient(90deg, transparent, rgba(47, 155, 255, 0.22), transparent);
   }
 
   .chip {
-    @apply cursor-pointer rounded-full border border-line bg-surface2 px-3 py-1.5 text-xs text-[#cfe0f7] transition-colors hover:border-accent hover:text-white;
+    /* 浅色主题下 surface2(#eef2f8) 和侧栏的 canvas(#f4f6fa) 几乎同色，
+       边框也淡，整颗 chip 会"融"进侧栏背景，看起来像普通文本而不是按钮。
+       改成白底 + 加深一档的边框，并在 hover 时整体染蓝，可点性才看得出来。 */
+    /* 注意：透明度只能用 Tailwind 刻度内的值（/5 /10 /20 /25 …），
+       /8 不在刻度里，@apply 会直接编译报错并让整页 500。 */
+    @apply cursor-pointer rounded-full border border-line bg-surface px-3 py-1.5 text-xs text-fg shadow-[0_1px_2px_rgba(16,32,58,.04)] transition-colors hover:border-accent hover:bg-accent/10 hover:text-accentInk;
   }
 
   .btn-primary {
@@ -76,7 +82,7 @@
     @apply my-0.5;
   }
   .prose-chat strong {
-    @apply font-semibold text-white;
+    @apply font-semibold text-fg;
   }
 }
 
@@ -101,3 +107,51 @@
   height: 100%;
   display: block;
 }
+
+/* ---- 胶囊下拉：选项逐条滑入 ---- */
+/*
+ * 为什么用 CSS animation 而不是 transition：
+ * 元素是展开那一刻才挂载的，transition 没有"初始状态"可过渡，
+ * 容易不触发。animation + animationDelay 天然支持错峰，也不用管 key 变化。
+ */
+@keyframes pillOptionIn {
+  from {
+    opacity: 0;
+    transform: translateX(-14px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.pill-option {
+  animation-name: pillOptionIn;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  animation-fill-mode: both;
+  will-change: transform, opacity;
+}
+
+/* 面板的细滚动条：默认 8px 在浮层里显得粗，这里收到 5px 且更淡 */
+.scrollbar-slim {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+}
+.scrollbar-slim::-webkit-scrollbar {
+  width: 5px;
+}
+.scrollbar-slim::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+}
+.scrollbar-slim::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+/* 尊重系统「减少动态效果」设置 */
+@media (prefers-reduced-motion: reduce) {
+  .pill-option {
+    animation: none;
+  }
+}
+

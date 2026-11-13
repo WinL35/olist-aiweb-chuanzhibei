@@ -79,7 +79,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <path d="M3 6h18M3 12h18M3 18h18" />
             </svg>
           </button>
-          <span className="text-[13px] font-semibold text-white">{activeName}</span>
+          <span className="text-[13px] font-semibold text-fg">{activeName}</span>
         </div>
 
         <main className="min-w-0 flex-1">{children}</main>

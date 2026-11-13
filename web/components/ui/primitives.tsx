@@ -38,7 +38,7 @@ export function Panel({
 /* ============ KPI 卡 ============ */
 
 const TONE: Record<string, string> = {
-  accent: "text-accent",
+  accent: "text-accentInk",
   mint: "text-mint",
   amber: "text-amber",
   coral: "text-coral",
@@ -57,7 +57,7 @@ export function KpiCard({
   hint?: ReactNode;
 }) {
   return (
-    <div className="card-star group min-w-0 p-4 transition-colors hover:border-[#35507a]">
+    <div className="card-star group min-w-0 p-4 transition-colors hover:border-[#b9cbe4]">
       <div className="truncate text-[11.5px] tracking-wide text-muted">{label}</div>
       <div
         className={`tnum mt-2 whitespace-nowrap text-[17px] font-bold leading-none sm:text-[21px] xl:text-[22px] ${TONE[tone]}`}
@@ -88,7 +88,7 @@ export function Pill({
         : tone === "coral"
           ? "text-coral"
           : tone === "accent"
-            ? "text-accent"
+            ? "text-accentInk"
             : "text-fg";
   return (
     <span className="inline-flex items-baseline gap-1.5 rounded-full border border-line bg-surface2/60 px-3 py-1.5 text-[11.5px] text-muted">
@@ -223,7 +223,7 @@ export function PageHeader({
   return (
     <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
       <div className="min-w-0">
-        <h1 className="text-[19px] font-bold leading-tight text-white">{title}</h1>
+        <h1 className="text-[19px] font-bold leading-tight text-fg">{title}</h1>
         <p className="mt-1 text-[12.5px] text-muted">{desc}</p>
       </div>
       {right}

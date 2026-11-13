@@ -43,11 +43,16 @@ class ChatIn(BaseModel):
 
 
 class FeedbackIn(BaseModel):
-    """对话页的 👍/👎 与纠正。字段全部可选，前端怎么发都能收。"""
-    question: str = Field(..., description="原始问题", max_length=500)
+    """对话页的 👍/👎 与纠正。字段全部可选，前端怎么发都能收。
+
+    注意：`question` 早先写成 `Field(..., ...)`，在 Pydantic v2 里 `...` 是「必填」，
+    前端一旦因流式时序拿不到问题原文就会 422，用户看到的是「参数异常」。
+    反馈是弱约束场景，这里统一给默认值，宁可记录一条不完整反馈，也不要拒收。
+    """
+    question: str = Field("", description="原始问题（缺失时由服务端补占位）")
     answer: str = Field("", description="系统回答")
     mode: str = Field("full", description="当时的运行模式")
-    verdict: str = Field("down", description="up / down")
+    verdict: str = Field("up", description="up / down")
     correction: str = Field("", description="用户认为正确的说法")
 
 
@@ -200,9 +205,14 @@ def eval_run(limit: int = Query(8, ge=1, le=40),
 # ---------------------------------------------------------------- 反馈闭环
 @router.post("/feedback", summary="提交一条反馈（👍/👎 与纠正）")
 def post_feedback(body: FeedbackIn):
-    """落库即可，不做任何自动改规则——规则变更必须人工审核 + 回归评测。"""
+    """落库即可，不做任何自动改规则——规则变更必须人工审核 + 回归评测。
+
+    只写 llm/feedback/feedback.db 这一张独立 SQLite 表，
+    不碰 olist_db 的任何看板数据，因此不存在「评价一下就改了看板」的风险。
+    """
     try:
-        fid = feedback.add(question=body.question, answer=body.answer, mode=body.mode,
+        fid = feedback.add(question=body.question or "（未提供问题原文）",
+                           answer=body.answer, mode=body.mode,
                            verdict=body.verdict, correction=body.correction)
     except ValueError as e:
         return _fail(str(e), 422)

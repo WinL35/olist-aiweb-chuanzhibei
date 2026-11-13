@@ -72,7 +72,7 @@ export default async function ExperimentPage() {
         >
           {better ? (
             <>
-              <p className="tnum text-[32px] font-bold leading-none text-accent">
+              <p className="tnum text-[32px] font-bold leading-none text-accentInk">
                 {fmt(better.better)}
                 <span className="text-[18px] font-normal text-muted">/{fmt(better.total)}</span>
               </p>

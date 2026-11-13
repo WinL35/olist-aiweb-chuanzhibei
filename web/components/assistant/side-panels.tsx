@@ -22,7 +22,7 @@ export function TracePanel({
         {steps.map((s, i) => (
           <div
             key={i}
-            className={`rounded-lg border-l-[3px] bg-[#141d30] px-2.5 py-2 text-[11.5px] ${
+            className={`rounded-lg border-l-[3px] bg-surface2 px-2.5 py-2 text-[11.5px] ${
               s.ok ? "border-accent" : "border-coral"
             }`}
           >
@@ -35,7 +35,7 @@ export function TracePanel({
             {!s.ok && <div className="mt-1 text-[10.5px] text-coral">{s.error || "调用失败"}</div>}
           </div>
         ))}
-        <div className="rounded-lg border-l-[3px] border-mint bg-[#141d30] px-2.5 py-2 text-[11.5px] text-muted">
+        <div className="rounded-lg border-l-[3px] border-mint bg-surface2 px-2.5 py-2 text-[11.5px] text-muted">
           正在生成回答…
         </div>
       </div>
@@ -48,7 +48,7 @@ export function TracePanel({
       return (
         <div className="space-y-1.5">
           {data.tools_used.map((t) => (
-            <div key={t} className="rounded-lg bg-[#141d30] px-2.5 py-2 text-[11.5px]">
+            <div key={t} className="rounded-lg bg-surface2 px-2.5 py-2 text-[11.5px]">
               <b>{t}</b>
               <div className="text-[10.5px] text-muted">离线引擎按意图自动调用</div>
             </div>
@@ -65,7 +65,7 @@ export function TracePanel({
         s.action === "tool" ? (
           <div
             key={i}
-            className={`rounded-lg border-l-[3px] bg-[#141d30] px-2.5 py-2 text-[11.5px] ${
+            className={`rounded-lg border-l-[3px] bg-surface2 px-2.5 py-2 text-[11.5px] ${
               s.ok ? "border-accent" : "border-coral"
             }`}
           >
@@ -80,7 +80,7 @@ export function TracePanel({
         ) : (
           <div
             key={i}
-            className="rounded-lg border-l-[3px] border-mint bg-[#141d30] px-2.5 py-2 text-[11.5px]"
+            className="rounded-lg border-l-[3px] border-mint bg-surface2 px-2.5 py-2 text-[11.5px]"
           >
             <span className="text-muted">#{s.step}</span> 生成回答（{s.content_chars ?? 0} 字）
           </div>
@@ -101,14 +101,14 @@ export function CitationsPanel({ data }: { data: ChatData | null }) {
       {list.map((c, i) => (
         <div
           key={i}
-          className="flex items-start justify-between gap-2 border-b border-dashed border-[#223049] py-1.5 text-[11.5px] last:border-0"
+          className="flex items-start justify-between gap-2 border-b border-dashed border-line py-1.5 text-[11.5px] last:border-0"
         >
           <span className="min-w-0 text-muted">
             {c["指标"]}
             <br />
             <span className="text-[10.5px] opacity-60">{c["来源"]}</span>
           </span>
-          <span className="tnum shrink-0 text-right font-medium text-white">{String(c["值"])}</span>
+          <span className="tnum shrink-0 text-right font-medium text-fg">{String(c["值"])}</span>
         </div>
       ))}
     </div>
@@ -138,7 +138,7 @@ export function RulesPanel({ data }: { data: ChatData | null }) {
       {rules.map((r) => (
         <div
           key={r.id}
-          className="flex items-start justify-between gap-2 border-b border-dashed border-[#223049] py-1 text-[11.5px] last:border-0"
+          className="flex items-start justify-between gap-2 border-b border-dashed border-line py-1 text-[11.5px] last:border-0"
         >
           <span className="text-muted">
             口径 {r.id}
@@ -151,7 +151,7 @@ export function RulesPanel({ data }: { data: ChatData | null }) {
       {snippets.map((s, i) => (
         <div
           key={i}
-          className="flex items-start justify-between gap-2 border-b border-dashed border-[#223049] py-1 text-[11.5px] last:border-0"
+          className="flex items-start justify-between gap-2 border-b border-dashed border-line py-1 text-[11.5px] last:border-0"
         >
           <span className="min-w-0 text-muted">
             《{s.source}》
@@ -217,13 +217,13 @@ export function EvalPanel() {
             </thead>
             <tbody>
               {result.summary.map((r) => (
-                <tr key={r.mode} className="border-t border-[#223049]">
+                <tr key={r.mode} className="border-t border-line">
                   <td className="py-1">{r.mode}</td>
                   <td className="tnum py-1 text-right">{r.A ?? "-"}%</td>
                   <td className="tnum py-1 text-right">{r.B ?? "-"}%</td>
                   <td className="tnum py-1 text-right">{r.C ?? "-"}%</td>
                   <td className="tnum py-1 text-right">{r.D ?? "-"}%</td>
-                  <td className="tnum py-1 text-right font-semibold text-white">{r.acc}%</td>
+                  <td className="tnum py-1 text-right font-semibold text-fg">{r.acc}%</td>
                 </tr>
               ))}
             </tbody>

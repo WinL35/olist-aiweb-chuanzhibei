@@ -60,6 +60,8 @@ export function FluidNav() {
   const router = useRouter();
   const panelRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<Array<HTMLAnchorElement | null>>([]);
+  /** 引擎实例：快捷键跳转后要用它把气泡定位到目标那一行 */
+  const engineRef = useRef<FluidTooltipEngine | null>(null);
 
   /** 悬停的是第几项（-1 = 没有悬停），四小人靠它决定侧身方向 */
   const [hoverIdx, setHoverIdx] = useState(-1);
@@ -90,7 +92,11 @@ export function FluidNav() {
       offsetX: 90,
     });
 
-    return () => engine.destroy();
+    engineRef.current = engine;
+    return () => {
+      engineRef.current = null;
+      engine.destroy();
+    };
   }, [engineItems]);
 
   /**
@@ -107,6 +113,12 @@ export function FluidNav() {
       if (!Number.isInteger(n) || n < 1 || n > NAV_ITEMS.length) return;
       e.preventDefault();
       router.push(`/${NAV_ITEMS[n - 1].key}`);
+      /**
+       * 跳转后把气泡滑到目标那一行，让用户看清"我到了第几项"。
+       * 鼠标此时通常不在侧栏上，所以用 reveal 主动唤起；
+       * 用户一旦把鼠标移进侧栏，正常的悬停逻辑会立刻接管，不会打架。
+       */
+      engineRef.current?.reveal(n - 1);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -177,8 +189,14 @@ export function FluidNav() {
         {/* 底部入口：四个小人的纯图标，**不加白色圆底**。
             因为小人本身带颜色（紫/黑/橙/黄），放在白底上看不出"图标感"，
             反而像一张缩略图贴在圆里；直接用图形做按钮，与上方线性图标列
-            在深灰面板上的观感更统一，点击区域仍是 84×84 的透明热区。 */}
-        <div className="flex shrink-0 flex-col items-center pb-6">
+            在深灰面板上的观感更统一。
+
+            宽度：侧栏 96px，按钮给到 92px（左右各留 2px），横向铺满。
+            图形本体 84×72 —— 比原来的 52×52 明显更宽更高。
+            参考截图量到的目标占比：小人整体约 55×76，宽高比接近 1:1.4（偏竖向），
+            所以这里也按竖向构图给，而不是压成一个扁的横向条。
+            72 高是上限：再高会撞到上面的导航列（那列是 flex-1 且可滚动）。 */}
+        <div className="flex shrink-0 flex-col items-center pb-5">
           <Link
             href="/assistant"
             ref={(el) => {
@@ -188,10 +206,10 @@ export function FluidNav() {
             aria-current={activeKey === "assistant" ? "page" : undefined}
             data-active={activeKey === "assistant" || undefined}
             onClick={() => setPulse((v) => v + 1)}
-            className="nav-btn mx-auto flex h-[84px] w-[84px] shrink-0 items-center justify-center self-center rounded-[28px] outline-none transition-[background-color,box-shadow] duration-[130ms] hover:bg-white/[.06] data-[active]:bg-white/[.11] data-[active]:shadow-[inset_0_0_0_1.5px_rgba(255,255,255,.28)] focus-visible:ring-[3px] focus-visible:ring-[#e9edf7] focus-visible:ring-offset-[5px] focus-visible:ring-offset-[#35363a]"
+            className="nav-btn mx-auto flex h-[78px] w-[92px] shrink-0 items-center justify-center self-center rounded-[20px] outline-none transition-[background-color,box-shadow] duration-[130ms] hover:bg-white/[.06] data-[active]:bg-white/[.11] data-[active]:shadow-[inset_0_0_0_1.5px_rgba(255,255,255,.28)] focus-visible:ring-[3px] focus-visible:ring-[#e9edf7] focus-visible:ring-offset-[5px] focus-visible:ring-offset-[#35363a]"
           >
             <NavCharacters
-              className="h-[52px] w-[52px] shrink-0"
+              className="h-[72px] w-[84px] shrink-0"
               hovered={hoverIdx >= 0}
               gazeRatio={hoverIdx < 0 ? 0.5 : hoverIdx / 6}
               pulse={pulse}

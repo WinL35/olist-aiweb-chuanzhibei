@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { clientGet } from "@/lib/client-api";
 import { money, pctRaw } from "@/lib/format";
 import { EmptyState, ErrorNote, PageHeader, Panel, Pill, PillRow } from "@/components/ui/primitives";
+import { PillSelect } from "@/components/ui/pill-select";
 import { PredictionChart } from "@/components/charts/prediction-chart";
 import type { ListPayload, PredictionCategory, PredictionResult } from "@/types/api";
 
@@ -68,30 +69,25 @@ export default function PredictionPage() {
 
       <div className="mb-4 flex flex-wrap items-center gap-2.5">
         <label className="text-[12px] text-muted">选择品类：</label>
-        <select
+        <PillSelect
           value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="max-w-[280px] rounded-lg border border-line bg-surface px-2.5 py-1.5 text-[12.5px] text-fg outline-none focus:border-accent"
-        >
-          {cats.map((c) => (
-            <option key={c.category} value={c.category}>
-              {c.category}（GMV {money(c.gmv)}）
-            </option>
-          ))}
-        </select>
+          onChange={(v) => setCategory(v)}
+          className="max-w-[280px]"
+          ariaLabel="选择品类"
+          options={cats.map((c) => ({
+            value: c.category,
+            label: c.category,
+            hint: `GMV ${money(c.gmv)}`,
+          }))}
+        />
 
         <label className="ml-2 text-[12px] text-muted">预测周数：</label>
-        <select
+        <PillSelect
           value={weeks}
-          onChange={(e) => setWeeks(Number(e.target.value))}
-          className="rounded-lg border border-line bg-surface px-2.5 py-1.5 text-[12.5px] text-fg outline-none focus:border-accent"
-        >
-          {WEEK_OPTIONS.map((w) => (
-            <option key={w} value={w}>
-              {w} 周
-            </option>
-          ))}
-        </select>
+          onChange={(v) => setWeeks(v)}
+          ariaLabel="预测周数"
+          options={WEEK_OPTIONS.map((w) => ({ value: w, label: `${w} 周` }))}
+        />
       </div>
 
       {err && <ErrorNote message={err} path={`/prediction/sales?category=${category}`} />}

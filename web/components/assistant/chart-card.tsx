@@ -31,7 +31,8 @@ export function ChartCard({ option, index }: { option: ChartOption; index: numbe
   const exportPng = useCallback(() => {
     const chart = chartRef.current;
     if (!chart) return;
-    const url = chart.getDataURL({ pixelRatio: 2, backgroundColor: "#141d30" });
+    // 导出图的底色要和页面一致，否则存下来是一张深色底的图（浅色主题下很突兀）
+    const url = chart.getDataURL({ pixelRatio: 2, backgroundColor: "#ffffff" });
     const a = document.createElement("a");
     a.href = url;
     a.download = `${title}.png`;
@@ -79,7 +80,7 @@ export function ChartCard({ option, index }: { option: ChartOption; index: numbe
 
   return (
     <figure className="mt-3">
-      <div className="rounded-[10px] border border-line bg-[#141d30] p-1">
+      <div className="rounded-[10px] border border-line bg-surface2 p-1">
         <EChart
           option={option}
           height={300}

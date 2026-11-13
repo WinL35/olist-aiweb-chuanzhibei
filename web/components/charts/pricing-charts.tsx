@@ -74,10 +74,11 @@ export function ElasticityScatter({ data }: { data: PricingRow[] }) {
           symbolSize: 9,
           itemStyle: { color: PAL[0], opacity: 0.8 },
           // 零线：预期营收变化=0 的分界，便于肉眼判断哪些调价是负收益
+          // 颜色跟随主题轴色，深浅主题切换时不用改这里
           markLine: {
             silent: true,
             symbol: "none",
-            lineStyle: { color: "#4a5a78", type: "dashed" },
+            lineStyle: { color: AXIS_COLOR, type: "dashed" },
             data: [{ yAxis: 0 }],
           },
           data: pts.map(

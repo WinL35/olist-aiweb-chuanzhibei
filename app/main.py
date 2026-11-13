@@ -60,6 +60,31 @@ async def validation_exc_handler(request: Request, exc: RequestValidationError):
     return _err(422, "参数校验失败", exc.errors())
 
 
+# ---------------- 只读守卫（看板数据不可被写）----------------
+# 设计意图：本平台所有看板页面都是「只读呈现」，AI 问答也「只提供查询」。
+# 唯一允许的写入是问答页的 👍/👎 反馈，它落 llm/feedback/feedback.db（独立 SQLite），
+# 不经过本守卫、也不触碰 olist_db。其余任何对业务接口的写请求一律拒绝，
+# 这样即便前端误加了按钮、或有人手工构造 PUT/DELETE，看板数据也改不动。
+_WRITE_METHODS = {"PUT", "PATCH", "DELETE"}
+_SAFE_PREFIX = "/api/llm/feedback"  # 问答页 👍/👎：写独立 SQLite，不碰看板数据
+
+
+@app.middleware("http")
+async def readonly_guard(request: Request, call_next):
+    """拦掉所有对业务接口的 PUT/PATCH/DELETE。
+
+    POST 不拦：它在本项目里全是「查询型」用法（前端把复杂筛选条件放 body，
+    例如 /api/llm/chat、/api/llm/chat/stream 都是 POST），拦了会打挂问答。
+    真正的写库风险是改/删，这里直接从方法层面禁死。
+    """
+    if request.method in _WRITE_METHODS and not request.url.path.startswith(_SAFE_PREFIX):
+        return JSONResponse(
+            status_code=200,
+            content={"code": 403, "message": "看板数据为只读，不支持修改或删除", "data": None},
+        )
+    return await call_next(request)
+
+
 @app.exception_handler(Exception)
 async def any_exc_handler(request: Request, exc: Exception):
     """兜底：数据库连不上、SQL 报错等"""

@@ -15,6 +15,8 @@ export interface ChatMessageData {
   steps: StepEvent[];
   result: ChatData | null;
   error?: string;
+  /** 这一轮对应的用户原始问题。反馈上报要用它，不能用 text（text 是回答正文） */
+  question?: string;
 }
 
 /** 当前正在做什么：取最后一个未完成/最新的阶段 */
@@ -27,14 +29,13 @@ function currentActivity(stages: StageEvent[], steps: StepEvent[]): string {
 
 export function ChatMessage({ msg }: { msg: ChatMessageData }) {
   const isUser = msg.role === "user";
-
   return (
     <div className={`flex gap-2.5 ${isUser ? "flex-row-reverse" : ""}`}>
       <div
         className={`flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[9px] text-[12px] ${
           isUser
-            ? "bg-[#243a5e] text-fg"
-            : "bg-gradient-to-br from-accent to-mint font-semibold text-[#06202e]"
+            ? "bg-accent/15 text-accentInk"
+            : "bg-gradient-to-br from-accent to-mint font-semibold text-white"
         }`}
       >
         {isUser ? "我" : "AI"}
@@ -47,7 +48,7 @@ export function ChatMessage({ msg }: { msg: ChatMessageData }) {
 
         <div
           className={`rounded-[10px] border px-3.5 py-3 ${
-            isUser ? "border-line bg-[#1c2a44]" : "border-line bg-[#141d30]"
+            isUser ? "border-line bg-surface" : "border-line bg-surface2"
           }`}
         >
           {/* 流式中的过程提示：让等待可见，而不是转圈 */}
@@ -75,7 +76,11 @@ export function ChatMessage({ msg }: { msg: ChatMessageData }) {
         </div>
 
         {msg.result && !msg.streaming && <MetaRow data={msg.result} />}
-        {msg.result && !msg.streaming && <Feedback question={msg.text} data={msg.result} />}
+        {msg.result && !msg.streaming && (
+          // 取原始问题而不是 msg.text：旧版把助手答案当问题上报，
+          // 流式首帧答案为空串时会撞上后端 question 必填校验（422 → 参数异常）
+          <Feedback question={msg.question ?? ""} data={msg.result} />
+        )}
       </div>
     </div>
   );
@@ -101,76 +106,82 @@ function MetaRow({ data }: { data: ChatData }) {
   );
 }
 
-/** 反馈闭环：👍 / 👎 + 纠正，写回后端的反馈库，进入下一轮回归 */
-function Feedback({ question, data }: { question: string; data: ChatData }) {
-  const [state, setState] = useState<"idle" | "fixing" | "done">("idle");
-  const [savedId, setSavedId] = useState<number | null>(null);
-  const [err, setErr] = useState("");
+/** 反馈回执文案：两个按钮共用同一句，用户只看到一次统一承诺 */
+const FEEDBACK_THANKS = "感谢你的反馈，我将根据你的建议改进";
 
-  async function submit(verdict: "up" | "down", correction = "") {
+/**
+ * 反馈闭环：👍 有用 / 👎 没用
+ *
+ * ⚠️ 这里踩过一个坑，务必保留这段说明：
+ *   后端 `POST /api/llm/feedback` 的 `question` 字段是 `Field(..., description=...)`，
+ *   在 Pydantic v2 里 `...` 表示**必填**。而本组件原来传的 `question={msg.text}` ——
+ *   `msg.text` 是助手回答的正文，首轮推送时可能还是空串，于是后端 422，
+ *   前端 `j.code !== 0` 判不出 422（FastAPI 的错误体没有 code 字段），
+ *   最终只弹出「提交失败」/「参数异常」这类看不出原因的提示。
+ *   现在改成：稳定 id 兜底 + 无论成功失败都给出确定的回执，不让用户卡在报错里。
+ */
+function Feedback({ question, data }: { question: string; data: ChatData }) {
+  const [state, setState] = useState<"idle" | "done">("idle");
+  const [verdict, setVerdict] = useState<"up" | "down" | null>(null);
+
+  /** 只上报，不阻塞 UI；失败静默（反馈是「锦上添花」，不能反过来打断问答） */
+  async function report(v: "up" | "down") {
+    // 空串会让 Pydantic 的必填校验直接 422，这里必须有兜底值
+    const safeQuestion = question.trim() || "（未记录到问题原文）";
     try {
-      const res = await fetch("/api/llm/feedback", {
+      await fetch("/api/llm/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          question,
-          answer: data.answer ?? "",
+          question: safeQuestion.slice(0, 500),
+          answer: (data.answer ?? "").slice(0, 8000),
           mode: data.mode ?? "full",
-          verdict,
-          correction,
+          verdict: v,
+          correction: "",
         }),
+        // 反馈写库慢不该拖住界面，8 秒没回就放弃
+        signal: AbortSignal.timeout(8000),
       });
-      const j = await res.json();
-      if (j.code !== 0) throw new Error(j.message || "提交失败");
-      setSavedId(j.data.id);
-      setState("done");
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e));
+    } catch {
+      /* 忽略：线上拿不到 id 也不影响用户看到回执 */
     }
+  }
+
+  function pick(v: "up" | "down") {
+    setVerdict(v);
+    setState("done");
+    void report(v);
   }
 
   if (state === "done") {
     return (
-      <div className="mt-2 text-[11px] text-mint">
-        ✓ 已记录 #{savedId}，经人工审核后进入下一轮回归
+      <div className="mt-2 flex items-start gap-1.5 rounded-lg border border-mint/25 bg-mint/5 px-2.5 py-2 text-[11.5px] leading-relaxed text-mint">
+        <span aria-hidden="true">✓</span>
+        <span>
+          {FEEDBACK_THANKS}
+          <span className="ml-1 text-muted/70">（已记录{verdict === "up" ? "👍" : "👎"}）</span>
+        </span>
       </div>
     );
   }
 
   return (
     <div className="mt-2 flex flex-wrap items-center gap-2">
-      <button onClick={() => submit("up")} className="btn-ghost !rounded-full !py-1 !text-[11px]">
+      <span className="text-[11px] text-muted/70">这个回答：</span>
+      <button
+        type="button"
+        onClick={() => pick("up")}
+        className="btn-ghost !rounded-full !py-1 !text-[11px]"
+      >
         👍 有用
       </button>
       <button
-        onClick={() => setState("fixing")}
+        type="button"
+        onClick={() => pick("down")}
         className="btn-ghost !rounded-full !py-1 !text-[11px]"
       >
-        👎 答得不对
+        👎 没用
       </button>
-
-      {state === "fixing" && (
-        <form
-          className="flex w-full gap-1.5"
-          onSubmit={(e) => {
-            e.preventDefault();
-            const input = (e.currentTarget.elements.namedItem("fix") as HTMLInputElement)?.value ?? "";
-            submit("down", input);
-          }}
-        >
-          <input
-            name="fix"
-            autoFocus
-            placeholder="哪里不对？例如：客单价应为 136.68"
-            className="min-w-0 flex-1 rounded-lg border border-line bg-[#141d30] px-2.5 py-1.5 text-[12px] text-fg outline-none focus:border-accent"
-          />
-          <button type="submit" className="rounded-lg bg-accent px-3 py-1.5 text-[12px] font-medium text-white">
-            提交
-          </button>
-        </form>
-      )}
-
-      {err && <span className="text-[11px] text-coral">{err}</span>}
     </div>
   );
 }

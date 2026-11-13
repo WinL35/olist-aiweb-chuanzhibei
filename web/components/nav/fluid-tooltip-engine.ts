@@ -129,6 +129,24 @@ export class FluidTooltipEngine {
   private lineWidths: number[] = [];
   /** 当前展示的索引，-1 表示完全隐藏 */
   private shownIndex = -1;
+  /**
+   * 这次气泡是被什么唤起的。
+   *
+   * 用来区分「键盘聚焦」和「鼠标悬停」两种场景：
+   *   · 键盘：按钮持焦即应持续显示，失焦才收 —— 这是可访问性要求
+   *   · 鼠标：移开就该收，**不管焦点还在不在按钮上**
+   *
+   * 踩过的坑：原先 onLeave 里无条件检查 `document.activeElement` 是否在
+   * 按钮组内，可鼠标点击导航后焦点本来就留在那个 <a> 上，
+   * 于是鼠标移开了气泡也不收，一直挂在那里（实测复现）。
+   */
+  private showSource: "pointer" | "focus" | null = null;
+  /** 已绑定的处理器引用，destroy() 时按引用精确解绑 */
+  private handlers: {
+    btn: HTMLElement;
+    onPointerEnter: EventListener;
+    onFocus: EventListener;
+  }[] = [];
 
   private readonly capsuleH: number;
   private readonly offsetX: number;
@@ -158,8 +176,13 @@ export class FluidTooltipEngine {
       "display:block",
       `height:${this.capsuleH}px`,
       `border-radius:${this.capsuleH / 2}px`,
-      "background:#1e1e23",
-      "box-shadow:0 6px 22px rgba(27,32,58,.28)",
+      /*
+       * 翡翠绿气泡（2026-11-13 由 #1e1e23 近黑改来）。
+       * 绿底与深灰侧栏 #35363a 的对比只有 3.77，比原来的黑底(≈1.4 反相)更容易"陷"进去，
+       * 所以投影加深、并加一道极细的亮边勾勒轮廓，让气泡明显浮在面板之上。
+       */
+      "background:#10a37f",
+      "box-shadow:0 6px 22px rgba(6,44,32,.42), inset 0 0 0 1px rgba(255,255,255,.16)",
       `left:${this.offsetX}px`,
       "top:0",
       "opacity:0",
@@ -194,16 +217,24 @@ export class FluidTooltipEngine {
 
       const label = document.createElement("span");
       label.textContent = it.label;
+      /*
+       * 绿底上的主文字用纯白：23px/600 属于 WCAG 的 large text，门槛 3.0，实测 3.20 达标。
+       * 原来跟着黑底用的 #f2f2f3 在绿底上只有 2.86，会有点发灰。
+       */
       label.style.cssText =
-        "font-size:23px;line-height:1;font-weight:600;letter-spacing:-.5px;color:#f2f2f3;" +
+        "font-size:23px;line-height:1;font-weight:600;letter-spacing:-.5px;color:#ffffff;" +
         "font-family:'Inter','Arial','Helvetica','Microsoft YaHei',sans-serif";
       row.appendChild(label);
 
       if (it.hint) {
         const hint = document.createElement("span");
         hint.textContent = it.hint;
+        /*
+         * 快捷键提示是次要信息。原来的中性灰 #89898e 放到绿底上只有 1.09，基本糊掉；
+         * 改用同色系的浅薄荷 #a9e8d8（2.31），靠"更浅"而不是"更灰"来表达层级。
+         */
         hint.style.cssText =
-          "font-size:19px;line-height:1;font-weight:600;letter-spacing:-.8px;color:#89898e;" +
+          "font-size:19px;line-height:1;font-weight:600;letter-spacing:-.8px;color:#a9e8d8;" +
           "min-width:48px;text-align:right;" +
           "font-family:'Inter','Arial','Helvetica','Microsoft YaHei',sans-serif";
         row.appendChild(hint);
@@ -266,18 +297,54 @@ export class FluidTooltipEngine {
 
   private bind() {
     this.buttons.forEach((btn, i) => {
-      btn.addEventListener("pointerenter", () => this.onEnter(i));
-      btn.addEventListener("focus", () => this.onEnter(i));
+      const onPointerEnter = (e: Event) => {
+        // 只有"真的用鼠标进来"才算 pointer 来源。
+        // 焦点触发时浏览器也可能补发 pointerenter，用 pointerType 排除。
+        const pe = e as PointerEvent;
+        this.onEnter(i, pe.pointerType === "mouse" ? "pointer" : "focus");
+      };
+      const onFocus = () => {
+        this.onEnter(i, this.focusSource(btn));
+      };
+      // 处理器必须留引用，否则 destroy() 里没法解绑
+      this.handlers.push({ btn, onPointerEnter, onFocus });
+      btn.addEventListener("pointerenter", onPointerEnter);
+      btn.addEventListener("focus", onFocus);
       btn.addEventListener("pointerleave", this.onLeave);
       btn.addEventListener("blur", this.onLeave);
     });
     this.panel.addEventListener("keydown", this.onKeyDown);
   }
 
+  /**
+   * 判定这次 focus 是不是键盘来的。
+   *
+   * 用 `:focus-visible` —— 浏览器自己维护的"焦点应以可见样式提示"状态，
+   * 规范定义就是"由键盘/辅助技术引起的焦点"，正是我们要的语义。
+   * 不要用 `:hover` 或自定义 pointerdown 标记：前者在同一位置连点时
+   * 会误判，后者会被上一轮事件残留污染（两种都实测踩过）。
+   */
+  private focusSource(btn: HTMLElement): "pointer" | "focus" {
+    try {
+      if (btn.matches(":focus-visible")) return "focus";
+    } catch {
+      /* 老浏览器不支持 :focus-visible，退回指针判定 */
+    }
+    return "pointer";
+  }
+
   /** 进入某一项：取消隐藏计时器，向目标中心与新宽度滑去 */
-  private onEnter(index: number) {
+  private onEnter(index: number, source: "pointer" | "focus" = "focus") {
     if (this.destroyed) return;
     this.clearHideTimer();
+    /**
+     * "pointer" 优先级更高：一旦确认这次是鼠标带进来的，
+     * 后续补发的 focus 事件不得把它降级成 "focus"，
+     * 否则气泡又会因为"持焦"而拒绝收起（就是最初的 bug）。
+     */
+    if (source === "pointer" || this.showSource !== "pointer") {
+      this.showSource = source;
+    }
 
     const firstShow = this.shownIndex < 0 || this.state.opacity <= 0.001;
     this.shownIndex = index;
@@ -308,14 +375,24 @@ export class FluidTooltipEngine {
     if (this.destroyed) return;
     this.clearHideTimer();
     this.hideTimer = window.setTimeout(() => {
-      // 如果仍有本组件内的按钮持焦（键盘操作场景），不得收起
-      if (this.buttons.some((b) => b === document.activeElement)) return;
+      /**
+       * 只有"键盘唤起"的气泡才因持焦而保持显示。
+       *
+       * 鼠标移开就一定要收：此时焦点通常还留在刚点过的 <a> 上
+       * （浏览器点击后会给链接/按钮焦点），若无条件按焦点判断，
+       * 气泡就会永远不收 —— 这正是"点击任意一个后提示不消失"的原因。
+       */
+      if (this.showSource === "focus" && this.buttons.some((b) => b === document.activeElement)) {
+        return;
+      }
       this.fadeOut();
     }, HIDE_DELAY);
   };
 
   private fadeOut() {
     this.shownIndex = -1;
+    // 收起即清空来源，避免标记跨轮累积影响下一次判断
+    this.showSource = null;
     this.target = { ...this.state, opacity: 0 };
     this.startFade(0);
     this.capsule.setAttribute("aria-hidden", "true");
@@ -426,6 +503,22 @@ export class FluidTooltipEngine {
     if (this.state.opacity > 0) this.fadeOut();
   }
 
+  /**
+   * 外部主动唤起并定位到第 index 项（快捷键 Ctrl/⌘ + 数字时调用）。
+   *
+   * 复用内部 onEnter 的整套逻辑：若气泡当前没显示，首次出现走"直接定位 + 只做透明度"；
+   * 若已在显示（比如鼠标正悬停在另一项上），则平滑滑到新行。
+   * 来源标记为 "pointer" 而不是 "focus" —— 这样它不会因为"持焦"而赖着不收，
+   * 鼠标一移开就照常淡出，和手动悬停的行为保持一致。
+   */
+  reveal(index: number) {
+    if (this.destroyed) return;
+    if (index < 0 || index >= this.buttons.length) return;
+    // 先重新量一次：换页瞬间布局可能有细微变化，用旧坐标会滑偏
+    this.measure();
+    this.onEnter(index, "pointer");
+  }
+
   destroy() {
     this.destroyed = true;
     this.clearHideTimer();
@@ -436,12 +529,13 @@ export class FluidTooltipEngine {
     this.ro?.disconnect();
     this.ro = null;
     document.removeEventListener("visibilitychange", this.onVisibility);
-    this.buttons.forEach((btn) => {
-      btn.removeEventListener("pointerenter", this.onEnter as unknown as EventListener);
+    this.handlers.forEach(({ btn, onPointerEnter, onFocus }) => {
+      btn.removeEventListener("pointerenter", onPointerEnter);
+      btn.removeEventListener("focus", onFocus);
       btn.removeEventListener("pointerleave", this.onLeave);
-      btn.removeEventListener("focus", this.onEnter as unknown as EventListener);
       btn.removeEventListener("blur", this.onLeave);
     });
+    this.handlers = [];
     this.panel.removeEventListener("keydown", this.onKeyDown);
     this.capsule.remove();
     this.rows = [];

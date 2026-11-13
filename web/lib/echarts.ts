@@ -48,7 +48,13 @@ export type { EChartsOption } from "echarts";
  */
 export type ChartOption = Record<string, unknown>;
 
-/** 主题常量：与 tailwind.config.ts 的设计令牌保持同源 */
+/**
+ * 主题常量：与 tailwind.config.ts 的设计令牌保持同源
+ *
+ * 2026-11-13 切换浅色主题：PAL 色板**保持不变**（蓝绿橙红在白底上依然清晰），
+ * 只把"底"相关的三项翻过来 —— 轴文字、分割线、tooltip 底色。
+ * 这三个值决定图表看起来是深色还是浅色，比改色板有效得多。
+ */
 export const PAL = [
   "#2f9bff",
   "#25d4a4",
@@ -60,16 +66,25 @@ export const PAL = [
   "#ffc107",
 ] as const;
 
-export const AXIS_COLOR = "#8ea0bd";
-export const SPLIT_LINE = "#22304a";
-export const PANEL_BG = "#1a2438";
+/**
+ * 轴标签与轴线：中灰，白底上够清晰又不抢眼。
+ * #8a97a8 在白底上 2.9，作为 11px 轴标签偏淡，压到 #6b7a8d（4.3）才读得清；
+ * 再深就会和正文抢视线。
+ */
+export const AXIS_COLOR = "#6b7a8d";
+/** 网格线：比边框更淡，否则白底上满屏方格 */
+export const SPLIT_LINE = "#e8edf4";
+/** tooltip / 浮层底色 */
+export const PANEL_BG = "#ffffff";
 
 export const BASE_GRID = { left: 84, right: 26, top: 34, bottom: 48 };
 
 export const TOOLTIP_STYLE = {
   backgroundColor: PANEL_BG,
-  borderColor: "#2a3650",
-  textStyle: { color: "#e8eef7" },
+  borderColor: "#dde4ee",
+  textStyle: { color: "#16202f" },
+  /* 白底 tooltip 必须带阴影，否则和卡片糊成一片看不出是浮层 */
+  extraCssText: "box-shadow:0 6px 22px -6px rgba(16,32,58,.18);border-radius:10px;",
 };
 
 /** 坐标轴通用样式，避免每个 option 重复写 */

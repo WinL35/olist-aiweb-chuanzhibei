@@ -72,7 +72,7 @@ export default function RfmPage() {
               onClick={() => setScheme(s.key)}
               className={`rounded-lg px-3 py-1.5 text-[12px] transition-colors ${
                 scheme === s.key
-                  ? "bg-accent/20 font-medium text-white"
+                  ? "bg-accent/15 font-medium text-accentInk"
                   : "text-muted hover:text-fg"
               }`}
             >
@@ -95,7 +95,7 @@ export default function RfmPage() {
                 <div className="truncate text-[12px] font-medium text-muted" title={seg.segment}>
                   {seg.segment}
                 </div>
-                <div className="tnum mt-1.5 text-[24px] font-bold leading-none text-accent">
+                <div className="tnum mt-1.5 text-[24px] font-bold leading-none text-accentInk">
                   {fmt(seg.cnt)}
                   <small className="ml-1.5 text-[12px] font-normal text-muted">
                     ({pctRaw(seg.pct)})

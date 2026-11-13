@@ -14,7 +14,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#0f1626",
+  // 与 tailwind 的 canvas 令牌同步（浅色主题）
+  themeColor: "#f4f6fa",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

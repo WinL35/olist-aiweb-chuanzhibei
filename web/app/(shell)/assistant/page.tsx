@@ -11,6 +11,7 @@ import {
   TracePanel,
 } from "@/components/assistant/side-panels";
 import { clientGet } from "@/lib/client-api";
+import { PillSelect } from "@/components/ui/pill-select";
 import { streamChat, type StageEvent, type StepEvent } from "@/lib/sse";
 import type { ChatData, ChatMode, ChatTurn, ExampleGroups, LlmHealth } from "@/types/api";
 
@@ -73,7 +74,17 @@ export default function AssistantPage() {
     setMsgs((prev) => [
       ...prev,
       { id: uid, role: "user", text: question, streaming: false, stages: [], steps: [], result: null },
-      { id: bid, role: "assistant", text: "", streaming: true, stages: [], steps: [], result: null },
+      {
+        id: bid,
+        role: "assistant",
+        text: "",
+        streaming: true,
+        stages: [],
+        steps: [],
+        result: null,
+        // 记下本轮提问，供 👍/👎 上报使用；不能用 text 顶替（那是回答正文）
+        question,
+      },
     ]);
 
     const patch = (fn: (m: ChatMessageData) => ChatMessageData) =>
@@ -139,9 +150,9 @@ export default function AssistantPage() {
     <div className="flex h-[calc(100dvh-45px)] lg:h-dvh">
       {/* ===== 左侧：对话 ===== */}
       <section className="flex min-w-0 flex-1 flex-col">
-        <header className="flex flex-wrap items-center gap-2 border-b border-line bg-[#141d30] px-4 py-2.5">
+        <header className="flex flex-wrap items-center gap-2 border-b border-line bg-surface2 px-4 py-2.5">
           <div className="mr-1 min-w-0">
-            <h1 className="text-[14px] font-bold leading-tight text-white">🧭 经营决策助手</h1>
+            <h1 className="text-[14px] font-bold leading-tight text-fg">🧭 经营决策助手</h1>
             <p className="text-[10.5px] text-muted">口径库 + 工具调用 + 检索</p>
           </div>
 
@@ -161,18 +172,14 @@ export default function AssistantPage() {
           </div>
 
           <div className="ml-auto flex items-center gap-2">
-            <select
+            <PillSelect
               value={mode}
-              onChange={(e) => setMode(e.target.value as ChatMode)}
+              onChange={(v) => setMode(v)}
+              align="end"
+              ariaLabel="消融模式（用于对比实验）"
               title="消融模式（用于对比实验）"
-              className="rounded-lg border border-line bg-surface px-2 py-1.5 text-[11.5px] text-fg outline-none focus:border-accent"
-            >
-              {MODES.map((m) => (
-                <option key={m.key} value={m.key} title={m.hint}>
-                  {m.label}
-                </option>
-              ))}
-            </select>
+              options={MODES.map((m) => ({ value: m.key, label: m.label, hint: m.hint }))}
+            />
             <button
               onClick={() => setPanelOpen((v) => !v)}
               className="btn-ghost lg:hidden"
@@ -194,6 +201,8 @@ export default function AssistantPage() {
                 stages: [],
                 steps: [],
                 result: null,
+                // 欢迎语不是回答，不参与反馈上报
+                question: "",
               }}
             />
           )}
@@ -218,7 +227,7 @@ export default function AssistantPage() {
             onChange={(e) => setInput(e.target.value)}
             placeholder="问问经营数据，例如：美妆这个品类未来 4 周能卖多少？"
             autoComplete="off"
-            className="min-w-0 flex-1 rounded-[10px] border border-line bg-[#141d30] px-3.5 py-2.5 text-[13px] text-fg outline-none transition-colors placeholder:text-muted/60 focus:border-accent"
+            className="min-w-0 flex-1 rounded-[10px] border border-line bg-surface2 px-3.5 py-2.5 text-[13px] text-fg outline-none transition-colors placeholder:text-muted/60 focus:border-accent"
           />
           <button type="submit" disabled={busy || !input.trim()} className="btn-primary">
             {busy ? "生成中" : "发送"}
@@ -275,7 +284,7 @@ export default function AssistantPage() {
               <div className="space-y-1">
                 {streamStages.map((s, i) => (
                   <div key={i} className="flex items-center gap-1.5 text-[11px] text-muted">
-                    <span className={s.done ? "text-mint" : "text-accent"}>
+                    <span className={s.done ? "text-mint" : "text-accentInk"}>
                       {s.done ? "✓" : "·"}
                     </span>
                     {s.label}
