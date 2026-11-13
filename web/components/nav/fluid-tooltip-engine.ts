@@ -177,11 +177,19 @@ export class FluidTooltipEngine {
       `height:${this.capsuleH}px`,
       `border-radius:${this.capsuleH / 2}px`,
       /*
-       * 翡翠绿气泡（2026-11-13 由 #1e1e23 近黑改来）。
-       * 绿底与深灰侧栏 #35363a 的对比只有 3.77，比原来的黑底(≈1.4 反相)更容易"陷"进去，
-       * 所以投影加深、并加一道极细的亮边勾勒轮廓，让气泡明显浮在面板之上。
+       * 翡翠绿气泡（2026-11-13 由 #1e1e23 近黑改来；2026-11-14 由 #10a37f 压深至 #0e9375）。
+       *
+       * 为什么要压深：主标签 23px/600 属 WCAG large text（门槛 3.0），#10a37f 上白字 3.20 勉强过；
+       * 但快捷键提示 19px 只有 2.32，怎么都过不去。三条路里：
+       *   ① 把提示字提到接近纯白 → 会和主标签抢视线，"次要"表达不出来；
+       *   ② 把提示字撤成中性灰 → 绿底上必糊（#89898e 只有 1.09）；
+       *   ③ 把背景压深 → 两个字的对比同时抬升，颜色观感几乎不变。
+       * 选了 ③：#0e9375 上白字 3.85、#d4f5eb 3.31，都过 large text 门槛。
+       *
+       * 代价说明：绿底 vs 深灰侧栏 #35363a 从 3.77 掉到 3.13（仍高于非文字图形门槛 3.0），
+       * 所以投影加深、加一道极细亮边勾勒轮廓，靠"浮起来"而不是"够亮"来区分层次。
        */
-      "background:#10a37f",
+      "background:#0e9375",
       "box-shadow:0 6px 22px rgba(6,44,32,.42), inset 0 0 0 1px rgba(255,255,255,.16)",
       `left:${this.offsetX}px`,
       "top:0",
@@ -230,12 +238,21 @@ export class FluidTooltipEngine {
         const hint = document.createElement("span");
         hint.textContent = it.hint;
         /*
-         * 快捷键提示是次要信息。原来的中性灰 #89898e 放到绿底上只有 1.09，基本糊掉；
-         * 改用同色系的浅薄荷 #a9e8d8（2.31），靠"更浅"而不是"更灰"来表达层级。
+         * 快捷键提示是次要信息，但**不能靠"糊"来表达次要**。
+         * 演进：#89898e（绿底 1.09，基本看不见）→ #a9e8d8（2.32，仍低于 large text 门槛 3.0）
+         * → #dff8f0（与绿底 2.87，仅作填充色不达标）→ 最终 #d4f5eb（3.31）。
+         * 达标靠的是背景压深到 #0e9375，而不是继续提亮文字——
+         * 文字越接近纯白，越会和主标签抢视线，"次要"就表达不出来了。
+         * 层级感由「字号小一档 + 排到右侧 + 同色系浅调」承担。
          */
         hint.style.cssText =
-          "font-size:19px;line-height:1;font-weight:600;letter-spacing:-.8px;color:#a9e8d8;" +
-          "min-width:48px;text-align:right;" +
+          "font-size:19px;line-height:1;font-weight:600;letter-spacing:-.8px;color:#d4f5eb;" +
+          /*
+           * min-width 从 48px 放宽到 76px：提示文案已由 "⌘1" 改为 "Ctrl/⌘1"，
+           * 宽度差不多翻倍。盒子不够宽时会换行，把 56px 的胶囊撑破。
+           * 用 min-width 而不是固定 width，是为了中文页面名特别短的那一档不会被反挤。
+           */
+          "min-width:76px;text-align:right;" +
           "font-family:'Inter','Arial','Helvetica','Microsoft YaHei',sans-serif";
         row.appendChild(hint);
       }

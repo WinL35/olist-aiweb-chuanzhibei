@@ -15,7 +15,7 @@
 | 样式方案 | **Tailwind CSS 3**（设计令牌集中管理） | `web/tailwind.config.ts` 为唯一配色入口 |
 | 图表 | **ECharts 5 按需引入** | 首屏共享 JS 仅 **87.3 kB**（全量包约 1.01 MB） |
 | AI 交互 | **SSE 流式**（`text/event-stream`） | 阶段进度 + 终稿按句落屏 |
-| 状态与路由 | React Hooks + App Router | 8 条真路由，可深链，`⌘/Ctrl + 1…8` 快捷键 |
+| 状态与路由 | React Hooks + App Router | 8 条真路由，可深链，`Ctrl/⌘ + 1…8` 快捷键 |
 
 ## 架构一览
 
@@ -122,8 +122,8 @@ npm run dev          # 开发模式；演示可用 npm run build && npm start
 
 浏览器打开 **`http://127.0.0.1:3000/`** —— Next.js App Router 主界面。
 
-> 旧版静态页仍保留在 `http://127.0.0.1:8000/`（Vue CDN 实现，作为技术演进对照），
-> 接口文档在 `http://127.0.0.1:8000/docs`。
+> 后端已收敛为**纯 API**：不再返回任何 HTML 页面，只有 `/docs` 接口文档（含 `/api/llm/*`）。
+> 早期基于 Vue CDN 的静态页已从仓库移除，技术演进过程可在 git 历史中回溯。
 > 前端默认连 `http://127.0.0.1:8000`，如后端换了地址，用 `PY_API_BASE` 环境变量覆盖。
 
 **⑤ 自检（30 秒）**
@@ -146,12 +146,13 @@ docker compose run --rm app python 一键导入算法库.py
 > 提供 `Dockerfile` 与 `docker-compose.yml`（MySQL 映射到宿主机 3307，避免与本地 3306 冲突）。
 > 说明：本机无 Docker 环境，该配置**未做实际构建验证**，仅按标准语法编写；
 > 推荐用上面的 pip 方式复现（已验证）。
+> 另注：`Dockerfile` 只覆盖 Python 侧（AI 接入层 + 查询接口），前端需按上面的 `cd web && npm run dev` 单独启动。
 
 ## 交付物速查
 
 | 要看什么 | 打开 |
 |---|---|
-| 提交前核对清单 | [提交材料/提交清单.md](提交材料/提交清单.md) |
+| 提交前核对清单 | [提交材料/提交清单_AIWEB.md](提交材料/提交清单_AIWEB.md) |
 | AI 协同过程（Prompt 快照） | [文档/Prompt快照.md](文档/Prompt快照.md) |
 | 技术文档（PDF 14 页） | `提交材料/技术文档.pdf`，源文件 [文档/技术文档.md](文档/技术文档.md) |
 | 演示视频录制脚本 | [文档/演示视频脚本.md](文档/演示视频脚本.md) |
@@ -338,24 +339,36 @@ Olist 不包含浏览、加购行为，因此“转化分析”采用订单状�
 所以模型无法编造数值；且若 `data_from` 本轮没被调用过，工具直接返回错误。
 图注还会自动标注口径编号（如「GMV = Σ 商品单价，不含运费（GMV-01）」）。
 
-两条前端入口：
+**前端入口只有一个：智能问答页**（侧栏第 8 项，或 `Ctrl/⌘+8`）。
 
-| 入口 | 定位 | 能力 |
-|---|---|---|
-| 看板右下角浮窗（`static/assets/ai-widget.js`） | 边看图边随手问 | 对话、出图、多轮追问、导出 PNG/CSV |
-| 独立分析页 `assistant.html` | 完整分析工作台 | 上述全部 + 取数轨迹面板、口径/依据侧栏、消融模式切换、👍👎 反馈 |
+| 能力 | 实现位置 |
+|---|---|
+| 对话 + 出图 + 多轮追问 | `web/app/(shell)/assistant/`、`components/assistant/` |
+| SSE 流式（阶段进度 + 终稿按句落屏） | `web/app/api/chat/route.ts` 透传、`web/lib/sse.ts` 解析 |
+| 取数轨迹面板、口径/依据侧栏、消融模式切换 | `components/assistant/side-panels.tsx` |
+| 👍👎 反馈 | `components/assistant/chat-message.tsx` → `POST /api/llm/feedback` |
+
+> 说明：**不是 token 级流式**。ReAct 必须先跑完工具才能生成终稿，
+> 所以推送的是「正在查什么 → 查到几条 → 正在组织结论」的阶段进度，
+> 终稿到达后按句落屏。这一点在代码注释与本文档里都写明了，不做夸大。
 
 ### 启动
 
 ```bash
+# ① 后端（AI 接入层 + 只读查询接口）
 python 启动后端.py
+
+# ② 前端（主要呈现形态）
+cd web && npm install && npm run dev
 ```
 
 | 地址 | 说明 |
 |---|---|
-| http://127.0.0.1:8000/ | 经营看板（右下角带对话浮窗） |
-| http://127.0.0.1:8000/assistant.html | 独立对话页面（完整工作台） |
+| http://127.0.0.1:3000/ | 前端主入口（8 个页面） |
 | http://127.0.0.1:8000/docs | 接口文档（含 `/api/llm/*`） |
+
+前端把 `/api/*` 代理到后端（`web/next.config.mjs` 的 `PY_API_BASE`，默认 `127.0.0.1:8000`），
+浏览器只需访问 3000 端口。
 
 ### 接入真实模型底座
 

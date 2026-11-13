@@ -42,17 +42,28 @@ export interface NavItem {
   Icon: () => JSX.Element;
 }
 
+/**
+ * 快捷键提示文案。
+ *
+ * 本项目在 Windows 上开发与演示，评委也多半在 Windows 上打开，而原来的 `⌘1`
+ * 是 macOS 专有符号 —— 评委看到会以为"Mac 才能用"，实际按键是 Ctrl。
+ * 又不能用 `navigator.platform` 判断后条件渲染：那是服务端渲染阶段拿不到的值，
+ * 首屏会 hydration 不一致（React 会报 mismatch 并整树重渲染）。
+ * 所以统一写成 `Ctrl/⌘N`：不判断环境、不漏信息，两边都对得上。
+ */
+const kbd = (n: number) => `Ctrl/⌘${n}`;
+
 /** 7 个数据页 + 1 个对话入口（底部圆形位） */
 export const NAV_ITEMS: NavItem[] = [
-  { key: "dashboard", name: "经营看板", hint: "⌘1", Icon: IconDashboard },
-  { key: "rfm", name: "用户分群", hint: "⌘2", Icon: IconUsers },
-  { key: "conversion", name: "转化分析", hint: "⌘3", Icon: IconFunnel },
-  { key: "prediction", name: "销量预测", hint: "⌘4", Icon: IconTrendUp },
-  { key: "recommend", name: "选品建议", hint: "⌘5", Icon: IconTag },
-  { key: "pricing", name: "定价建议", hint: "⌘6", Icon: IconTarget },
-  { key: "experiment", name: "模型实验", hint: "⌘7", Icon: IconFlask },
+  { key: "dashboard", name: "经营看板", hint: kbd(1), Icon: IconDashboard },
+  { key: "rfm", name: "用户分群", hint: kbd(2), Icon: IconUsers },
+  { key: "conversion", name: "转化分析", hint: kbd(3), Icon: IconFunnel },
+  { key: "prediction", name: "销量预测", hint: kbd(4), Icon: IconTrendUp },
+  { key: "recommend", name: "选品建议", hint: kbd(5), Icon: IconTag },
+  { key: "pricing", name: "定价建议", hint: kbd(6), Icon: IconTarget },
+  { key: "experiment", name: "模型实验", hint: kbd(7), Icon: IconFlask },
   // 底部圆形位不用线性图标，改用 NavCharacters 四小人，Icon 仅为保持类型一致
-  { key: "assistant", name: "智能问答", hint: "⌘8", Icon: IconTarget },
+  { key: "assistant", name: "智能问答", hint: kbd(8), Icon: IconTarget },
 ];
 
 export function FluidNav() {
