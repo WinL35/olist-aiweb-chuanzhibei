@@ -277,10 +277,16 @@ export function NavCharacters({
       ref={rootRef}
       className={`relative ${className}`}
       aria-hidden="true"
-      // 深灰面板(#35363a)上，纯黑小人几乎融进背景；
-      // 给它一层极淡的外发光把轮廓托起来，四根柱子同理。
-      style={{ filter: "drop-shadow(0 1px 1.5px rgba(0,0,0,.55))" }}
     >
+      {/*
+        ⚠️ 这里绝对不能加 filter / transform / perspective / contain。
+        它们会让本元素成为后代的"包含块"，下面所有子元素的 % 定位就不再相对
+        这个 52px 的盒子，而是相对最近的包含块（最终是视口）——
+        结果就是四根柱子被撑到全屏大小，整页变成四根巨大的蓝紫柱子。
+        （曾经加过 filter: drop-shadow(...)，就是这个故障。）
+
+        深浅对比改用「给柱子加一圈极细的深色描边」实现，效果等价且无副作用。
+      */}
       {/* 紫色：最高，被橙色遮住下半身（这就是原作里"只露出上半截"的来源） */}
       <div
         ref={purpleRef}
@@ -308,7 +314,11 @@ export function NavCharacters({
           left: `${PAD + span * 0.44}%`,
           width: `${span * 0.19}%`,
           height: "75%",
-          background: "#2D2D2D",
+          // 原作是 #2D2D2D，但侧栏面板是 #35363a，两者明度几乎相同会糊在一起。
+          // 提到 #1b1c1f（更暗）+ 一圈 0.5px 半透明白描边做轮廓，
+          // 既不改变"黑小人"的语义，又能从深灰底上分离出来。
+          background: "#1b1c1f",
+          boxShadow: "0 0 0 0.5px rgba(255,255,255,.28)",
           transformOrigin: "bottom center",
           zIndex: 2,
           willChange: "transform",
