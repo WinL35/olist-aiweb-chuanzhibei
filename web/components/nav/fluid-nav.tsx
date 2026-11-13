@@ -2,12 +2,10 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { FluidTooltipEngine } from "./fluid-tooltip-engine";
 import {
-  BrandMark,
-  IconChat,
   IconDashboard,
   IconFlask,
   IconFunnel,
@@ -16,6 +14,7 @@ import {
   IconTrendUp,
   IconUsers,
 } from "./icons";
+import { NavCharacters } from "./nav-characters";
 
 /**
  * 侧栏导航（流体提示气泡版）
@@ -28,6 +27,12 @@ import {
  *
  * 快捷键 ⌘1…⌘8 是**真实生效**的（见下方 keydown），不是画上去的装饰，
  * 因为"提示写着 ⌘3 但按了没反应"比没有提示更糟。
+ *
+ * 底部「智能问答」入口是四个会追鼠标的小人（NavCharacters）。
+ * 它们原先的触发条件是登录页的账号框/密码框聚焦，这里搬过来后改成：
+ *   悬停导航按钮 → 小人侧身、眼珠转向该按钮；
+ *   点击导航按钮 → 触发一次「对视」。
+ * 事件源就在本组件的 nav 上，用 React 状态统一收口后传下去。
  */
 
 export interface NavItem {
@@ -46,7 +51,8 @@ export const NAV_ITEMS: NavItem[] = [
   { key: "recommend", name: "选品建议", hint: "⌘5", Icon: IconTag },
   { key: "pricing", name: "定价建议", hint: "⌘6", Icon: IconTarget },
   { key: "experiment", name: "模型实验", hint: "⌘7", Icon: IconFlask },
-  { key: "assistant", name: "智能问答", hint: "⌘8", Icon: IconChat },
+  // 底部圆形位不用线性图标，改用 NavCharacters 四小人，Icon 仅为保持类型一致
+  { key: "assistant", name: "智能问答", hint: "⌘8", Icon: IconTarget },
 ];
 
 export function FluidNav() {
@@ -54,6 +60,11 @@ export function FluidNav() {
   const router = useRouter();
   const panelRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<Array<HTMLAnchorElement | null>>([]);
+
+  /** 悬停的是第几项（-1 = 没有悬停），四小人靠它决定侧身方向 */
+  const [hoverIdx, setHoverIdx] = useState(-1);
+  /** 点击脉冲：每点一次导航按钮就 +1，四小人据此触发一次「对视」 */
+  const [pulse, setPulse] = useState(0);
 
   const activeKey = pathname.split("/")[1] || "dashboard";
 
@@ -146,6 +157,12 @@ export function FluidNav() {
                 aria-label={item.name}
                 aria-current={isActive ? "page" : undefined}
                 data-active={isActive || undefined}
+                /* 四小人的两个触发点：悬停定位 + 点击脉冲 */
+                onPointerEnter={() => setHoverIdx(i)}
+                onFocus={() => setHoverIdx(i)}
+                onPointerLeave={() => setHoverIdx((v) => (v === i ? -1 : v))}
+                onBlur={() => setHoverIdx((v) => (v === i ? -1 : v))}
+                onClick={() => setPulse((v) => v + 1)}
                 className="nav-btn group relative flex h-[84px] w-[84px] shrink-0 items-center justify-center rounded-[28px] text-white/80 outline-none transition-[background-color,color] duration-[130ms] hover:bg-white/[.025] hover:text-white data-[active]:bg-white/[.11] data-[active]:text-white focus-visible:ring-[3px] focus-visible:ring-[#e9edf7] focus-visible:ring-offset-[5px] focus-visible:ring-offset-[#35363a]"
               >
                 {/* 只缩小图标本体：按钮 84 / 圆角 28 / 间距 9 / 内边距 全部保持原值 */}
@@ -157,8 +174,11 @@ export function FluidNav() {
           })}
         </nav>
 
-        {/* 底部圆形位：白底 + 黑色镂空徽标，视觉上与上方图标列区分开 */}
-        <div className="flex shrink-0 flex-col items-center pb-7">
+        {/* 底部入口：四个小人的纯图标，**不加白色圆底**。
+            因为小人本身带颜色（紫/黑/橙/黄），放在白底上看不出"图标感"，
+            反而像一张缩略图贴在圆里；直接用图形做按钮，与上方线性图标列
+            在深灰面板上的观感更统一，点击区域仍是 84×84 的透明热区。 */}
+        <div className="flex shrink-0 flex-col items-center pb-6">
           <Link
             href="/assistant"
             ref={(el) => {
@@ -167,9 +187,15 @@ export function FluidNav() {
             aria-label={NAV_ITEMS[7].name}
             aria-current={activeKey === "assistant" ? "page" : undefined}
             data-active={activeKey === "assistant" || undefined}
-            className="nav-btn flex h-[66px] w-[66px] items-center justify-center rounded-full bg-white p-[15px] text-[#111] outline-none transition-[box-shadow] duration-[130ms] hover:shadow-[0_0_0_3px_rgba(255,255,255,.18)] focus-visible:ring-[3px] focus-visible:ring-[#e9edf7] focus-visible:ring-offset-[5px] focus-visible:ring-offset-[#35363a]"
+            onClick={() => setPulse((v) => v + 1)}
+            className="nav-btn mx-auto flex h-[84px] w-[84px] shrink-0 items-center justify-center self-center rounded-[28px] outline-none transition-[background-color,box-shadow] duration-[130ms] hover:bg-white/[.06] data-[active]:bg-white/[.11] data-[active]:shadow-[inset_0_0_0_1.5px_rgba(255,255,255,.28)] focus-visible:ring-[3px] focus-visible:ring-[#e9edf7] focus-visible:ring-offset-[5px] focus-visible:ring-offset-[#35363a]"
           >
-            <BrandMark />
+            <NavCharacters
+              className="h-[52px] w-[52px] shrink-0"
+              hovered={hoverIdx >= 0}
+              gazeRatio={hoverIdx < 0 ? 0.5 : hoverIdx / 6}
+              pulse={pulse}
+            />
           </Link>
         </div>
       </div>
