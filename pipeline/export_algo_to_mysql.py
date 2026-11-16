@@ -18,11 +18,11 @@
 前提：先跑过 import_algo1.py / import_algo2.py（SQLite 里已有最新结果），
       且 MySQL 里已执行过 olist_algo_mysql.sql 建好表结构。
 """
+import sqlite3
 import sys
 from pathlib import Path
 
 import pymysql
-import sqlite3
 
 BASE = Path(__file__).resolve().parent.parent   # 项目根目录
 sys.path.append(str(BASE))

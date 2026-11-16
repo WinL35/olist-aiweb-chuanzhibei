@@ -727,7 +727,6 @@ def compose_baseline(question: str) -> dict:
 
 
 def _result(question: str, mode: str, answer: str, extra: dict) -> dict:
-    from llm import config as cfg
     return {
         "question": question,
         "answer": answer,

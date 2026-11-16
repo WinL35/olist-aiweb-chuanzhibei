@@ -19,13 +19,12 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 # 让 `import config` 能命中项目根目录的 config.py
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 import config
-
-from app.dashboard import router as dashboard_router
 from app.analysis import router as analysis_router
-from app.pricing import router as pricing_router
+from app.dashboard import router as dashboard_router
 from app.experiment import router as experiment_router
-from app.selection import router as selection_router
 from app.llm_api import router as llm_router
+from app.pricing import router as pricing_router
+from app.selection import router as selection_router
 
 app = FastAPI(
     title="Olist 经营分析与智能选品平台",

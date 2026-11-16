@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """经营与行为看板 API"""
 from fastapi import APIRouter, Query
+
 from app.db import query, query_one
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])

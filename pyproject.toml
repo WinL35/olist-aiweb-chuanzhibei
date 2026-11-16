@@ -1,0 +1,79 @@
+# ============================================================================
+# 后端（Python）代码规范配置
+# ----------------------------------------------------------------------------
+# 工具：Ruff —— 用 Rust 写的 Python linter，单文件即可替代 flake8 + isort +
+#       pyupgrade + bugbear，无需装一堆插件，启动在毫秒级。
+#
+# 用法：
+#   pip install ruff
+#   ruff check .                 # 检查
+#   ruff check . --fix           # 自动修复安全项
+#   ruff format .                # 格式化（等价 black）
+#
+# 当前基线：ruff check 全量通过（0 错误）。
+# 存量豁免项的来龙去脉见下方 per-file-ignores 的注释，新增代码不允许再引入。
+# ============================================================================
+
+[tool.ruff]
+# 与 README「3.1 环境要求」一致（Python 3.10+），按最低支持版本判定语法
+target-version = "py310"
+line-length = 100
+
+exclude = [
+    ".git",
+    "__pycache__",
+    ".venv",
+    "web",
+    "cleaned",
+    "算法1",
+    "算法2",
+]
+
+[tool.ruff.lint]
+# 选规则集而不是全开：只保留对「可维护性」真正有约束力的几组，
+# 避免把时间花在纯风格偏好上。
+select = [
+    "E4",  # pycodestyle：导入相关（重复导入、星号导入）
+    "E7",  # pycodestyle：语法层面的坏味道（单行多语句等）
+    "E9",  # pycodestyle：运行时才炸的错误（语法错、IO 错）
+    "F",   # pyflakes：未使用变量/导入、未定义名、重复定义 —— 抓真 bug 的主力
+    "I",   # isort：导入分组与排序
+    "B",   # flake8-bugbear：可变默认参数、zip 长度不一致等隐患
+    "SIM", # flake8-simplify：可简化的冗余写法
+    "RET", # flake8-return：return 语句冗余
+]
+
+ignore = [
+    # 单行 if 紧凑写法。仅 pipeline/algo1_model.py 的分段统计处使用，
+    # 一行一个区间可读性反而更好，属于有意为之。
+    "E701",
+    # zip() 未显式传 strict=。存量 6 处，长度均由同源数据保证；
+    # 新增代码请显式写 strict=True/False，不要沿用这个豁免。
+    "B905",
+    # try/except/pass 静默容错。RAG 打分与图表兜底处故意吞异常，
+    # 换成 contextlib.suppress 只是换写法，没必要为风格改。
+    "SIM105",
+    # return 前多一次赋值。保留局部变量是为调试时能直接看值。
+    "RET504",
+]
+
+[tool.ruff.lint.isort]
+# 识别项目内的第一方模块，避免把它们归到第三方块里
+known-first-party = ["app", "llm", "pipeline", "config", "envload"]
+
+[tool.ruff.lint.per-file-ignores]
+# ---- 存量死变量登记（F841）：赋值后从未使用，属早期调试残留 ----
+# 删除属代码改动，暂不在此次规范整改中处理；新增代码不得再引入。
+"llm/agent/composer.py" = ["F841"]     # wape：WAPE 指标算出来后未参与组装
+"llm/agent/planner.py" = ["F841"]      # own：工具归属字段未使用
+"pipeline/algo2_model.py" = ["F841"]   # n_seasons / season_of：季节数中间量
+# import_algo2.py 的 tables 是建表语句缓冲，B007 为循环键未使用
+"pipeline/import_algo2.py" = ["F841", "B007"]
+# 该脚本需先 sys.path 插入项目根再 import config，故导入不在文件顶部
+"pipeline/export_algo_to_mysql.py" = ["E402"]
+# 根目录的中文名脚本是给人双击运行的启动器 / 导入向导：
+# 它们要先打印横幅、探测端口、把项目根插进 sys.path，再按需延迟导入 uvicorn，
+# 把 import 全部提到文件顶部会让「按下回车前就先报错」，属于有意为之。
+"启动后端.py" = ["E402"]
+"一键导入主库.py" = ["E402"]
+"一键导入算法库.py" = ["E402"]

@@ -332,7 +332,7 @@ def main() -> int:
     report = [
         "Olist 数据质量报告",
         "=" * 40,
-        f"生成脚本：pipeline/clean_merge.py",
+        "生成脚本：pipeline/clean_merge.py",
         f"订单数：{n_orders:,}",
         f"客户数（customer_unique_id 去重）：{n_customers:,}",
         f"商品数：{products['product_id'].nunique():,}",

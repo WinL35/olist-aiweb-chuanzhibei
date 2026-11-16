@@ -231,7 +231,7 @@ def build_rfm_clusters():
     n2 = int((rfm["f_score_quantile"] >= 3).sum())
     log(f"  【修正说明】原五分位把 {n1:,}/{n2:,} 个"
         f"（{n1/max(n2,1)*100:.1f}%）只买 1 次的用户标成了「高 F」")
-    log(f"  修正后 F 分分布:")
+    log("  修正后 F 分分布:")
     for k, v in rfm["f_score"].value_counts().sort_index().items():
         fr = rfm.loc[rfm["f_score"] == k, "frequency"]
         log(f"      F={k}: {v:>7,} 人   真实购买次数 {fr.min()}~{fr.max()}")

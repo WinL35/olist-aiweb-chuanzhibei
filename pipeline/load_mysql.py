@@ -4,15 +4,15 @@
 用法: python load_mysql.py
 依赖: pymysql, pandas, scikit-learn, sqlalchemy
 """
-import os
 import sys
 import time
-import pymysql
-import pandas as pd
-import numpy as np
 from pathlib import Path
-from sklearn.preprocessing import StandardScaler
+
+import numpy as np
+import pandas as pd
+import pymysql
 from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 import config
@@ -76,9 +76,9 @@ def compute_rfm(cursor):
     """读取 fact_rfm 的 R/F/M，计算分箱评分 + K-Means 分群并回写。"""
     # 与算法1 共用同一套打分函数（单一事实来源，避免两处口径漂移）
     try:
-        from algo1_model import make_scorer, f_score_by_threshold
+        from algo1_model import f_score_by_threshold, make_scorer
     except ImportError:                    # 以包形式导入时
-        from pipeline.algo1_model import make_scorer, f_score_by_threshold
+        from pipeline.algo1_model import f_score_by_threshold, make_scorer
 
     cursor.execute("SELECT customer_unique_id, recency, frequency, monetary FROM fact_rfm")
     rows = cursor.fetchall()
@@ -116,7 +116,7 @@ def compute_rfm(cursor):
     BATCH = 3000
     for i in range(0, len(data), BATCH):
         cursor.executemany(sql, data[i:i + BATCH])
-    print(f"\n[RFM] K-Means 分群完成:")
+    print("\n[RFM] K-Means 分群完成:")
     seg = rfm["rfm_segment"].value_counts()
     for k, v in seg.items():
         print(f"    {k}: {v} 人 ({v/len(rfm)*100:.1f}%)")

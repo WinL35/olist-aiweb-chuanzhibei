@@ -47,13 +47,12 @@ def query(sql, params=None):
     params 为空时不走 pymysql 的 % 格式化，避免 SQL 中的字面量 % 被误解析
     （例如 LIKE '主模型%'）。
     """
-    with get_conn() as conn:
-        with conn.cursor() as cur:
-            if params:
-                cur.execute(sql, params)
-            else:
-                cur.execute(sql)
-            return cur.fetchall()
+    with get_conn() as conn, conn.cursor() as cur:
+        if params:
+            cur.execute(sql, params)
+        else:
+            cur.execute(sql)
+        return cur.fetchall()
 
 
 def query_one(sql, params=None):

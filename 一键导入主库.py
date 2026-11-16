@@ -5,7 +5,6 @@
 双击运行或在 PyCharm 里 Run 即可。会提示输入 MySQL root 密码（输入时不显示）。
 导入内容: 13 张表, 约 87 万行, 预计 1~2 分钟。
 """
-import getpass
 import os
 import sys
 import time

@@ -27,7 +27,7 @@ print("=" * 64)
 print("  Olist 经营分析与智能选品平台 - 后端")
 print("=" * 64)
 print(f"  工作目录: {BASE}")
-print(f"  .env    : " + (f"已加载 {_injected} 个变量" if _injected else "未找到或无需新增（走默认值/离线模式）"))
+print("  .env    : " + (f"已加载 {_injected} 个变量" if _injected else "未找到或无需新增（走默认值/离线模式）"))
 
 # 依赖检查
 missing = []
@@ -60,8 +60,10 @@ if missing:
     sys.exit(1)
 
 # 数据库连通性预检（密码不对时直接提示输入，省得去改 config.py）
-import config
 import pymysql
+
+import config
+
 
 def _connect(pwd):
     return pymysql.connect(host=config.DB_CONFIG["host"], port=config.DB_CONFIG["port"],
@@ -102,7 +104,7 @@ try:
         cur.execute("SHOW DATABASES LIKE %s", (config.ALGO_DB,))
         has_algo = cur.fetchone() is not None
     c.close()
-    print(f"  [OK] MySQL 连接成功")
+    print("  [OK] MySQL 连接成功")
     print(f"       主库 {config.DB_CONFIG['database']}: {'存在' if has_biz else '缺失!'}")
     print(f"       算法库 {config.ALGO_DB}: {'存在' if has_algo else '缺失!'}")
     if not has_biz or not has_algo:
