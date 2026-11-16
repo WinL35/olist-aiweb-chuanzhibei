@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""垂直大模型层冒烟测试（不需要启动服务）。
+"""AI 能力层冒烟测试（不需要启动服务）。
 
 检查：配置文件、口径库、检索、22 个工具、护栏、Agent 端到端。
 每项都有明确的通过/失败判定，失败时退出码非 0，可直接接 CI。
@@ -34,7 +34,7 @@ def main() -> int:
     from llm.tools import executor, registry
 
     print("=" * 78)
-    print("垂直大模型层冒烟测试")
+    print("AI 能力层冒烟测试")
     print("=" * 78)
 
     check("配置文件", lambda: (

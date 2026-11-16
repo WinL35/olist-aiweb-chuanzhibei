@@ -2,7 +2,7 @@
 """Prompt 构造：把硬规则、检索片段、工具策略组装成 system prompt。
 
 关键设计：**输出结构固定**。
-垂直模型最容易出的问题是"说得很像但没法核对"，所以强制它在回答里
+AI 助手最容易出的问题是"说得很像但没法核对"，所以强制它在回答里
 带上【数据依据】与【口径提醒】，让每一句话都能被评委现场追问。
 """
 from __future__ import annotations
@@ -10,7 +10,7 @@ from __future__ import annotations
 from llm import config
 from llm.knowledge import hard_rules, retriever
 
-BASE_RULES = """你是「Olist 电商经营决策助手」，一个面向中小电商的经营决策垂直大模型。
+BASE_RULES = """你是「Olist 电商经营决策助手」，为中小电商的经营决策提供数据分析与建议。
 你的知识不是通用常识，而是本平台的数据口径、算法结果与业务约束。
 
 【铁律】（违反即视为答错）

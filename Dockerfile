@@ -1,4 +1,4 @@
-# Olist 电商经营决策垂直大模型 —— 可选部署方式（官方未强制，作为复现加分项）
+# Olist 电商经营决策 AI Web 应用 —— 可选部署方式（官方未强制，作为复现加分项）
 #
 # 构建：docker build -t olist-llm .
 # 运行：见 docker-compose.yml（一键起 MySQL + 应用）

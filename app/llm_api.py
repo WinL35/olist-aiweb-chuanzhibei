@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""垂直大模型 API（/api/llm/*）
+"""AI 能力层 API（/api/llm/*）
 
 对外三个能力：
     GET  /api/llm/health     各层就绪状态（口径库/检索/工具/底座）
@@ -60,7 +60,7 @@ def _fail(msg: str, code: int = 500) -> dict:
     return {"code": code, "message": msg, "data": None}
 
 
-@router.get("/health", summary="垂直大模型各层就绪状态")
+@router.get("/health", summary="AI 能力层各层就绪状态")
 def health():
     """口径库 / 检索 / 工具 / 护栏 / 底座 的自检。"""
     try:

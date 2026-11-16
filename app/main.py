@@ -98,7 +98,7 @@ app.include_router(analysis_router)     # /api/*（RFM / 转化 / 预测）
 app.include_router(pricing_router)      # /api/pricing/*（算法2 定价建议）
 app.include_router(experiment_router)   # /api/experiment/*（算法2 离线实验）
 app.include_router(selection_router)    # /api/selection/*（算法2 选品结果）
-app.include_router(llm_router)          # /api/llm/*（垂直大模型：口径/工具/评测）
+app.include_router(llm_router)          # /api/llm/*（AI 能力层：口径/工具/评测）
 
 
 @app.get("/api/health", tags=["基础"])
@@ -131,7 +131,7 @@ FRONTEND_URL = os.getenv("FRONTEND_URL", "http://127.0.0.1:3000")
 def index():
     """根路径给出入口指引：本服务是纯 API，界面在 Next.js 侧。"""
     return {
-        "service": "Olist 电商经营决策垂直大模型 · API",
+        "service": "Olist 电商经营决策 AI Web 应用 · API",
         "docs": "/docs",
         "health": "/api/health",
         "frontend": FRONTEND_URL,

@@ -267,7 +267,7 @@ export interface SummaryStat {
   value_text: string;
 }
 
-/* ========== 垂直大模型对话 ========== */
+/* ========== AI 对话 ========== */
 
 export type ChatMode = "full" | "no_tools" | "no_rag" | "baseline";
 

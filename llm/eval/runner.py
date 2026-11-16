@@ -161,7 +161,7 @@ def run(limit: int | None = None, modes: list[str] | None = None,
 def _print(out: dict) -> None:
     print()
     print("=" * 84)
-    print(f"垂直大模型评测  |  底座={out['provider']}/{out['model']}  "
+    print(f"AI 能力评测  |  底座={out['provider']}/{out['model']}  "
           f"题数={out['n_questions']}  用时={out['elapsed_s']}s")
     if out["simulated"]:
         print("⚠️  离线模式：语言组织由确定性规则引擎代替（数值仅反映管线有效性）")
@@ -193,7 +193,7 @@ def _write_report(out: dict) -> None:
     full = next((x for x in s if x["mode"] == "full"), None)
 
     lines = [
-        "# 垂直大模型评测报告",
+        "# AI 能力评测报告",
         "",
         f"> 生成时间：{out['generated_at']}　|　题数：{out['n_questions']}　|　"
         f"耗时：{out['elapsed_s']} s",

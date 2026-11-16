@@ -2,7 +2,7 @@
   "name": "olist-ai-web",
   "version": "1.0.0",
   "private": true,
-  "description": "Olist 电商经营决策垂直大模型 · Web 前端（Next.js 14 App Router + TypeScript + Tailwind CSS）",
+  "description": "Olist 电商经营决策 AI Web 应用 · 前端（Next.js 14 App Router + TypeScript + Tailwind CSS）",
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build",
