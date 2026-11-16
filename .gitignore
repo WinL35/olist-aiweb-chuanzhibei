@@ -37,7 +37,7 @@ cleaned/
 #   schema.sql            → 主库 olist_db    13 张表
 #   Olist_Views.sql       → 主库 olist_db    10 个视图
 #   olist_algo_mysql.sql  → 算法库 olist_algo_db 9 张表（含算法结果数据）
-# 例外：Olist.sql 是全量原始数据导出（151 MB），不入库，见 README「数据准备」
+# 例外：Olist.sql 是全量原始数据导出（144 MB），不入库，见 README「数据准备」
 # ⚠️ 不要在这里写 schema.sql / Olist_Views.sql / olist_algo_mysql.sql
 
 # ---- 会话临时工件 ----
@@ -45,6 +45,7 @@ _memory_.ses
 .dsh-*/
 .pytest_cache/
 .mypy_cache/
+.ruff_cache/
 
 # ---- 浏览器探针临时产物（CDP 截图验证用，跑完即删） ----
 _probe_*

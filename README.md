@@ -162,9 +162,14 @@ cp .env.example .env               # Windows: copy .env.example .env
 |---|---|---|
 | `MYSQL_PASSWORD` | ✅ | 本机 MySQL root 密码 |
 | `LLM_API_KEY` | 可选 | 不填则走离线引擎（`provider=offline`） |
+| `PY_API_BASE` | 可选 | **前端专用**，写在 `web/.env.local`（模板 `web/.env.example`），默认 `http://127.0.0.1:8000` |
 
 其余变量（`MYSQL_HOST/PORT/USER/DB`、`LLM_BASE_URL`、`LLM_MODEL`、`LLM_TEMPERATURE`、
-`LLM_MAX_STEPS` 等）均有默认值，模板里有注释。`.env` 已在 `.gitignore` 中，不会进仓库。
+`LLM_MAX_STEPS` 等）均有默认值，模板里有注释。`.env` 与 `web/.env.local` 均已在
+`.gitignore` 中，不会进仓库。
+
+> 两条线的环境变量模板是分开的：根 `.env.example` 管后端 + MySQL，`web/.env.example`
+> 管前端。原因是 Next.js 进程只读 `web/` 下的 `.env.local`，不会读根目录的 `.env`。
 
 **③ 导数据（5 分钟，一次性）**
 
@@ -240,7 +245,58 @@ python pipeline/export_algo_to_mysql.py
 
 ---
 
-## 四、团队信息
+## 四、代码规范
+
+前后端各有一套**可执行**的检查工具，配置随仓库提供，clone 下来即可复跑，
+不靠「我们很规范」这类口头承诺。
+
+| 范围 | 工具 | 配置文件 | 复跑命令 | 当前结果 |
+|---|---|---|---|---|
+| 前端类型 | TypeScript `strict` | `web/tsconfig.json` | `cd web && npm run typecheck` | **0 错误** |
+| 前端规范 | ESLint（`next/core-web-vitals`） | `web/.eslintrc.json` | `cd web && npm run lint` | **0 warning / 0 error** |
+| 后端规范 | Ruff（替代 flake8 + isort + pyupgrade） | `pyproject.toml` | `ruff check .` | **0 错误** |
+
+开发期依赖单独放在 `requirements-dev.txt`，运行项目只需 `requirements.txt`。
+
+### 4.1 分层边界
+
+- **后端三层不互相越界**：`app/` 只做 HTTP 参数校验与响应组装，`llm/` 只管 AI 编排与工具，`pipeline/` 只跑离线算法。路由层不写 SQL，一律走 `app/db.py`。
+- **前端**：函数组件 + Hooks；跨层数据全部有 TS 类型（`web/types/`）；服务端组件与客户端组件用 `"use client"` 显式区分；ECharts 按需引入，首屏共享 JS 87.3 kB（全量引入约 1.01 MB）。
+- **两个库物理隔离**：业务库 `olist_db` 只读，用户反馈落独立 SQLite（`llm/feedback/feedback.db`），互不影响。
+
+### 4.2 注释约定
+
+模块头写**「这个文件解决什么问题、为什么这样设计」**，不写「本函数返回列表」这类同义反复。
+当前覆盖情况（脚本实测）：
+
+- 42 个 Python 模块中 **40 个**有模块级 docstring（另 2 个是空的 `__init__.py`）；
+- HTTP 路由层（`app/`）**75%** 的函数带 docstring（49/65）；
+- 23 个工具的说明以 **schema description** 形式写在注册表里 —— 模型直接消费这段文字，比 docstring 更靠前、更有效；
+- 离线算法脚本（`pipeline/`）以文件头注释声明「输入什么 CSV、输出什么表」。
+
+### 4.3 提交信息约定
+
+`feat` / `fix` / `docs` / `chore` / `refactor` 前缀 + 一句话说明「改了什么、为什么改」，
+不含「update」「修改一下」这类无信息量的标题。历史提交可在 GitHub 上逐条核对。
+
+### 4.4 存量问题的处理方式（不隐瞒）
+
+`ruff check` 有 4 条规则做了**全局豁免**、另有 3 条只对**具体文件**放宽，
+理由逐条写在同一份 `pyproject.toml` 的注释里，不是静默关规则：
+
+| 豁免项 | 范围 | 理由 |
+|---|---|---|
+| `E701` 单行 `if` | 全局 | 算法分段统计处一行一个区间，可读性更好 |
+| `B905` `zip()` 缺 `strict=` | 全局（存量 6 处） | 数据长度由同源保证；新增代码要求显式传入 |
+| `SIM105` `try/except/pass` | 全局 | RAG 打分与出图兜底处故意吞异常 |
+| `RET504` 多余赋值 | 全局 | 保留局部变量便于调试断点 |
+| `F841` 未使用变量 | 4 个文件 | 5 处早期调试残留，已登记待清理 |
+| `B007` 循环键未使用 | 1 个文件 | `import_algo2.py` 的建表缓冲循环 |
+| `E402` 导入不在顶部 | 4 个文件 | 需先插 `sys.path` / 先打印横幅，属有意为之 |
+
+---
+
+## 五、团队信息
 
 | 项目 | 内容 |
 |---|---|
@@ -263,7 +319,7 @@ python pipeline/export_algo_to_mysql.py
 
 ---
 
-## 五、文档索引
+## 六、文档索引
 
 | 要看什么 | 打开 |
 |---|---|
@@ -302,7 +358,7 @@ python scripts/run_eval.py --update-gate   # 确认无回归后更新基线
 
 ---
 
-## 六、诚实声明
+## 七、诚实声明
 
 - 未配置 Key 时所有数字来自**离线规则引擎**，不可当作大模型能力指标；
 - 主评测集 100% 属**自出题自评分**，离线引擎在其上拿到 100% 属于过拟合：同一批题换盲测立刻掉到 75%；
