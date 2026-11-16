@@ -13,8 +13,13 @@ cleaned/
 算法2/
 Dataset/
 *.db
-*.sql
 *.bak
+
+# ⚠️ 这里不要把 *.sql 整类排除。
+# schema.sql / Olist_Views.sql / olist_algo_mysql.sql 是建库必需脚本，
+# 一键导入主库.py 启动时会先检查 schema.sql 是否存在，缺了直接退出。
+# 只排除全量原始导出（144 MB，且可用脚本重算）。
+Olist.sql
 
 # 构建/会话临时产物
 __pycache__/

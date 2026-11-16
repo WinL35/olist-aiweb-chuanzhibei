@@ -28,4 +28,9 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
     CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=4).status==200 else 1)"
 
-CMD ["python", "启动后端.py"]
+# 直接调用 uvicorn，不经过 启动后端.py。原因有两条，都是容器环境特有的：
+#   1) 该脚本是给人在本机双击用的，内含 input() 交互提示（密码错误时等输入、
+#      出错时「按回车键退出」），容器里没有 TTY，一旦走到分支就抛 EOFError 退出；
+#   2) 它固定绑 127.0.0.1，容器内回环地址对外不可达，端口映射 8000 会连不上。
+# 因此这里显式绑 0.0.0.0，并关掉 reload（生产/演示不需要热重载）。
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,0 +1,37 @@
+# ============================================================================
+# 编辑器统一配置
+# ----------------------------------------------------------------------------
+# 目的：不管你用 VS Code / PyCharm / Vim，缩进、换行、末尾空行都一致，
+# 避免提交里混进纯空白改动。大多数 IDE 原生支持，无需装插件。
+#
+# 缩进宽度的依据：
+#   Python  — 4 空格（PEP 8）
+#   TS/TSX  — 2 空格（前端生态与 Tailwind 惯例）
+#   Markdown — 不限定，禁止删行尾空格（两个空格是换行语法）
+# ============================================================================
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+[*.py]
+indent_size = 4
+
+[*.{ts,tsx,js,jsx,json,css,mjs}]
+indent_size = 2
+
+[*.md]
+# Markdown 行尾两个空格是有意义的硬换行，不能自动裁掉
+trim_trailing_whitespace = false
+
+[*.{yml,yaml}]
+indent_size = 2
+
+[Makefile]
+indent_style = tab

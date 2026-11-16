@@ -231,8 +231,17 @@ docker compose run --rm app python 一键导入算法库.py
 ```
 
 `docker-compose.yml` 把 MySQL 映射到宿主机 3307，避免与本地 3306 冲突。
-说明：`Dockerfile` 只覆盖 Python 侧，前端仍需 `cd web && npm run dev` 单独启动；
-该配置按标准语法编写但**未做实际构建验证**，推荐用上面的 pip 方式复现（已验证）。
+
+**诚实说明**：`Dockerfile` 只覆盖 Python 侧，前端仍需 `cd web && npm run dev` 单独启动；
+该配置按标准语法编写，但**未在本机实际构建验证**（开发机未安装 Docker），
+推荐用上面的 pip 方式复现（已验证）。
+
+本次已修正两处会直接导致跑不通的问题，供有 Docker 环境的评审复核：
+
+| 问题 | 现象 | 修正 |
+|---|---|---|
+| `CMD` 调用 `启动后端.py` | 该脚本含 `input()` 交互提示、且绑 `127.0.0.1`，容器内无 TTY 会退出、端口也对外不可达 | 改为直接 `uvicorn app.main:app --host 0.0.0.0` |
+| `.dockerignore` 排除了 `*.sql` | 三个建表脚本被挡在镜像外，`一键导入主库.py` 检查到缺 `schema.sql` 直接退出 | 只排除全量导出 `Olist.sql`，保留三个建表脚本 |
 
 ### 3.4 从零重算算法结果（可选，验证可复现）
 
