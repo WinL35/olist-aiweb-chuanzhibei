@@ -158,18 +158,45 @@ pip install -r requirements.txt
 cp .env.example .env               # Windows: copy .env.example .env
 ```
 
-| 变量 | 必填 | 说明 |
+**MySQL（`config.py` 读取）**
+
+| 变量 | 默认值 | 必填 | 说明 |
+|---|---|---|---|
+| `MYSQL_PASSWORD` | `root` | ✅ | 本机 MySQL root 密码，模板里默认值是占位，必须改成你自己的 |
+| `MYSQL_HOST` | `localhost` | | 装在本机就保持默认 |
+| `MYSQL_PORT` | `3306` | | |
+| `MYSQL_USER` | `root` | | |
+| `MYSQL_DB` | `olist_db` | | 主库名，13 张表 + 10 个视图 |
+| `MYSQL_ALGO_DB` | `olist_algo_db` | | 算法库名，9 张表 |
+
+**大模型（`llm/config.py` 读取，OpenAI 兼容协议）**
+
+| 变量 | 默认值 | 必填 | 说明 |
+|---|---|---|---|
+| `LLM_API_KEY` | 空 | 可选 | 不填则走离线确定性引擎（`provider=offline`，界面会标注） |
+| `LLM_BASE_URL` | `https://api.deepseek.com/v1` | | 换通义 / 智谱 / 本地 Ollama 只改这一行 |
+| `LLM_MODEL` | `deepseek-chat` | | |
+| `LLM_TEMPERATURE` | `0.2` | | 取数类任务不需发散 |
+| `LLM_MAX_TOKENS` | `1200` | | 终稿长度上限 |
+| `LLM_TIMEOUT` | `45` | | 单次请求超时（秒） |
+| `LLM_MAX_STEPS` | `4` | | ReAct 最多几轮工具调用 |
+| `LLM_MAX_TOOL_CALLS` | `6` | | 单轮最多几次工具调用（防跑飞） |
+| `LLM_RAG_TOP_K` | `4` | | 一次召回几段文档 |
+| `LLM_RAG_MIN_SCORE` | `0.05` | | 相关性下限，低于不注入 |
+| `LLM_MODE` | `full` | | 消融开关：`full` / `no_tools` / `no_rag` / `baseline`，用于跑对照实验 |
+
+**前端（写在 `web/.env.local`，模板 `web/.env.example`）**
+
+| 变量 | 默认值 | 说明 |
 |---|---|---|
-| `MYSQL_PASSWORD` | ✅ | 本机 MySQL root 密码 |
-| `LLM_API_KEY` | 可选 | 不填则走离线引擎（`provider=offline`） |
-| `PY_API_BASE` | 可选 | **前端专用**，写在 `web/.env.local`（模板 `web/.env.example`），默认 `http://127.0.0.1:8000` |
+| `PY_API_BASE` | `http://127.0.0.1:8000` | 前端把 `/api/*` 转发到哪个后端地址，换机器只改这一行 |
 
-其余变量（`MYSQL_HOST/PORT/USER/DB`、`LLM_BASE_URL`、`LLM_MODEL`、`LLM_TEMPERATURE`、
-`LLM_MAX_STEPS` 等）均有默认值，模板里有注释。`.env` 与 `web/.env.local` 均已在
-`.gitignore` 中，不会进仓库。
+`.env` 与 `web/.env.local` 均已在 `.gitignore` 中，不会进仓库；`OPENAI_API_KEY` /
+`OPENAI_BASE_URL` 作为兼容别名同样生效（填了会覆盖 `LLM_*` 对应项）。
 
-> 两条线的环境变量模板是分开的：根 `.env.example` 管后端 + MySQL，`web/.env.example`
-> 管前端。原因是 Next.js 进程只读 `web/` 下的 `.env.local`，不会读根目录的 `.env`。
+> 两条线的模板是分开的：根 `.env.example` 管后端 + MySQL，`web/.env.example` 管前端。
+> 原因是 Next.js 进程只读 `web/` 下的 `.env.local`，不会读根目录的 `.env` ——
+> 这一点不写清楚，新人一定会把 `PY_API_BASE` 填到根 `.env` 里然后疑惑为什么不生效。
 
 **③ 导数据（5 分钟，一次性）**
 
