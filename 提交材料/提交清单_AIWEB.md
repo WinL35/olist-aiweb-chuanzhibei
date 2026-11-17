@@ -34,7 +34,7 @@
 | 托管平台 | GitHub / Gitee（须设为 Public 或提供评审访问权限） | **https://github.com/WinL35/olist-aiweb-chuanzhibei**　Public · main · MIT |
 | 代码规范 | 代码结构清晰，含有效注释，遵循主流代码规范 | TypeScript `strict` **0 错误**；ESLint `next/core-web-vitals` **0 warning**；Ruff **0 错误**（配置见 `pyproject.toml`、`web/.eslintrc.json`、`.editorconfig`，clone 下来即可复跑）；42 个 Python 模块中 40 个有模块级 docstring |
 | README 文件 | 项目介绍、技术架构、安装运行指南、团队信息 | 七章齐备：项目介绍 / 技术架构 / 安装与运行 / 代码规范 / 团队信息 / 文档索引 / 诚实声明 |
-| Git 记录 | 保留完整提交历史，体现真实开发过程 | **50 条提交**，2026-11-07 → 11-18，前缀 `feat/fix/docs/chore/refactor`，每条写明「改了什么、为什么改」 |
+| Git 记录 | 保留完整提交历史，体现真实开发过程 | **51 条提交**，2026-11-07 → 11-18，前缀 `feat/fix/docs/chore/refactor`，每条写明「改了什么、为什么改」 |
 | 环境配置 | 完整的环境配置说明（环境变量模板、依赖清单） | 根 `.env.example`（MySQL 6 项 + 大模型 11 项）、`web/.env.example`（前端 `PY_API_BASE`）、`requirements.txt`、`requirements-dev.txt`、`web/package.json` |
 
 ---
@@ -116,6 +116,25 @@
 | （7）是否在其他项目基础上优化 | 第七章：早期原型与本次版本的 8 维度对照表 + 重做范围说明 | ✅ |
 
 > 篇幅 12 页（A4）/ 7763 字 / 6 张图 / 6 张表；版式沿用技术文档的样式（同字体、同页边距、同页码），两份材料放在一起视觉统一。
+
+### 3.3 提交包（交给评审的那一个 zip）
+
+`广州商学院_电商经营决策智能助手_AIWEB提交包_20261118.zip` —— **45.9 MB / 158 个条目**
+
+按赛事三项清单分目录，评审拿到一个文件即可逐项对照：
+
+| 目录 | 内容 | 对应要求 |
+|---|---|---|
+| `00_提交说明.txt` | 三项清单逐条对照表 + 六步复现命令 + 运行环境 + 数据许可 | 总入口 |
+| `01_技术文档/` | 技术文档 PDF（29 页）+ docx 源文件 | 技术文档 4 项 |
+| `02_演示视频/` | 演示视频 MP4（6 分 31 秒 / 2026×1080） | 演示视频 4 项 |
+| `03_作品介绍文档/` | 作品介绍文档 PDF + docx（12 页） | 评分表 7 项 |
+| `04_提交清单/` | 本清单 Markdown | 自查用 |
+| `05_源代码/olist-aiweb-chuanzhibei/` | **完整代码仓库快照：150 个文件 / 16.7 MB**，与 GitHub `main` 逐字节一致（150 个 blob 的 SHA-1 全等校验通过） | 代码仓库 5 项 |
+
+源码快照内含 `README.md`、`.env.example`（17 键）、`web/.env.example`、`requirements.txt` / `requirements-dev.txt`、`web/package.json` + `package-lock.json`、`schema.sql`、`Olist_Views.sql`、`olist_algo_mysql.sql`、`Dockerfile`，以及 `文档/` 下 RAG 依赖的 7 份语料。解包后 `python -m compileall` 47 个 py 文件全通，`web/app/(shell)/` 下 8 个路由目录齐备。
+
+包内**不含** `.git`、`node_modules`、`.next`、`.env` 与 128 MB 清洗数据：前三项由 `npm install` 重建，`.env` 涉密（模板已给），清洗数据在 Release `v1.0.0` 的 `cleaned.zip`（52 MB）；完整提交历史在 GitHub 仓库页面查看。
 
 ---
 
@@ -215,3 +234,4 @@ ls -lh 提交材料/
 | 2026-11-18 | 技术文档压缩到 29 页并对齐「AI 技术说明 / 创新点说明」两项要求；多模态与端云协同检索两条口径统一为规划项（删除无代码支撑的 0.27 ms / 重合率 1.00 等实测数字）；演示视频音量修复并入库；删除旧版技术文档；补公网在线演示地址 |
 | 2026-11-18 | 发布 **Release `v1.0.0`**，附 `cleaned.zip`（52 MB / 13 个 csv），clone 后无需 Kaggle 账号即可复现；README、数据集说明同步补下载入口 |
 | 2026-11-18 | 新增**作品介绍文档**（12 页 / 7763 字 / 6 张线上实拍截图），按赛事 7 项要求组织；第三节拆为 3.1 技术文档与 3.2 作品介绍文档 |
+| 2026-11-18 | 提交包改为**含源码的全量包**（45.9 MB / 158 条目）：新增 `05_源代码/` 完整仓库快照（150 文件 / 16.7 MB / 与 `main` 逐字节一致），新增 `00_提交说明.txt` 三项清单对照表；新增 3.3 提交包结构说明 |
