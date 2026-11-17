@@ -21,6 +21,8 @@
 | 数据真实性 | `/api/health` 返回 `olist_db`（MySQL 8.4.11）与 `olist_algo_db`（RFM 95,420 行），接口读的是真实库 |
 | 能力边界 | 智能问答需配置大模型 Key；未配置时自动降级为离线规则引擎，高频问法仍可正确回答 |
 
+> **配套数据包**：仓库不含 128 MB 的 `cleaned/`，完整数据见 [Release v1.0.0](https://github.com/WinL35/olist-aiweb-chuanzhibei/releases/tag/v1.0.0) 附件 `cleaned.zip`（52 MB / 13 个 csv），解压到项目根目录即可执行导入，无需 Kaggle 账号。
+
 > 赛项将公网在线演示列为**可选加分项**。本项目已部署，评审可直接打开体验。
 
 ---
@@ -32,7 +34,7 @@
 | 托管平台 | GitHub / Gitee（须设为 Public 或提供评审访问权限） | **https://github.com/WinL35/olist-aiweb-chuanzhibei**　Public · main · MIT |
 | 代码规范 | 代码结构清晰，含有效注释，遵循主流代码规范 | TypeScript `strict` **0 错误**；ESLint `next/core-web-vitals` **0 warning**；Ruff **0 错误**（配置见 `pyproject.toml`、`web/.eslintrc.json`、`.editorconfig`，clone 下来即可复跑）；42 个 Python 模块中 40 个有模块级 docstring |
 | README 文件 | 项目介绍、技术架构、安装运行指南、团队信息 | 七章齐备：项目介绍 / 技术架构 / 安装与运行 / 代码规范 / 团队信息 / 文档索引 / 诚实声明 |
-| Git 记录 | 保留完整提交历史，体现真实开发过程 | **47 条提交**，2026-11-07 → 11-18，前缀 `feat/fix/docs/chore/refactor`，每条写明「改了什么、为什么改」 |
+| Git 记录 | 保留完整提交历史，体现真实开发过程 | **48 条提交**，2026-11-07 → 11-18，前缀 `feat/fix/docs/chore/refactor`，每条写明「改了什么、为什么改」 |
 | 环境配置 | 完整的环境配置说明（环境变量模板、依赖清单） | 根 `.env.example`（MySQL 6 项 + 大模型 11 项）、`web/.env.example`（前端 `PY_API_BASE`）、`requirements.txt`、`requirements-dev.txt`、`web/package.json` |
 
 ---
@@ -134,7 +136,7 @@
 | # | 事项 | 影响 | 建议 |
 |---|---|---|---|
 | 1 | `Dockerfile` 未在本机实际构建验证 | README 已如实声明，评审按 pip 方式复现即可 | 保持声明，不要改成「已验证」 |
-| 2 | `cleaned/`（128 MB）未入库 | README 已给获取方式，复现需自备数据 | 保持现状 |
+| 2 | `cleaned/`（128 MB）不入 git 历史 | 已挂 **Release `v1.0.0`** 附件 `cleaned.zip`（52 MB），解压到项目根目录即可导入；只是 `git clone` 本身不含数据 | 保持 Release 方式，评委点一下就能下载 |
 | 3 | 线上演示的后端与本机同构部署，单机承载 | 多人同时访问时响应会变慢 | 答辩演示前先自测一次，必要时现场用本地版兜底 |
 
 ### 四条必须主动声明的局限（别等评委问）
@@ -190,3 +192,4 @@ ls -lh 提交材料/
 | 2026-11-14 | 新建 AI WEB 版清单，替换旧版「个人赛 · 选题 8」清单；对齐官方 7 项材料 |
 | 2026-11-17 | 技术文档按实时项目状态重拍全部截图、修正团队分工与代码规模 |
 | 2026-11-18 | 技术文档压缩到 29 页并对齐「AI 技术说明 / 创新点说明」两项要求；多模态与端云协同检索两条口径统一为规划项（删除无代码支撑的 0.27 ms / 重合率 1.00 等实测数字）；演示视频音量修复并入库；删除旧版技术文档；补公网在线演示地址 |
+| 2026-11-18 | 发布 **Release `v1.0.0`**，附 `cleaned.zip`（52 MB / 13 个 csv），clone 后无需 Kaggle 账号即可复现；README、数据集说明同步补下载入口 |

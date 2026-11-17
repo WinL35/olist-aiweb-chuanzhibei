@@ -212,8 +212,10 @@ python 一键导入主库.py       # 建 olist_db（13 表），导入 cleaned/ 
 python 一键导入算法库.py     # 建 olist_algo_db（9 表）+ 主库 10 个视图
 ```
 
-> 仓库不含 128 MB 的 `cleaned/` 与原始数据（体积原因）。获取方式见
-> [文档/数据集说明.md](文档/数据集说明.md)，或把 `cleaned/*.csv` 放回项目根目录。
+> 仓库不含 128 MB 的 `cleaned/` 与原始数据（体积原因）。
+> **直接下载 → [cleaned.zip](https://github.com/WinL35/olist-aiweb-chuanzhibei/releases/download/v1.0.0/cleaned.zip)（52 MB）**，
+> 解压到项目根目录即为 `cleaned/`，无需 Kaggle 账号；也可按
+> [文档/数据集说明.md](文档/数据集说明.md) 从原始数据重建。
 > 注意：`schema.sql` / `Olist_Views.sql` / `olist_algo_mysql.sql` 三个建表脚本**已随仓库提供**，
 > 缺少任一个都无法建出完整库。
 
@@ -389,6 +391,7 @@ python pipeline/export_algo_to_mysql.py
 | AI 协同过程（Prompt 快照） | [文档/Prompt快照.md](文档/Prompt快照.md) |
 | 演示视频录制脚本 | [文档/演示视频脚本.md](文档/演示视频脚本.md) |
 | 数据来源与口径 | [文档/数据集说明.md](文档/数据集说明.md)、[文档/口径手册.md](文档/口径手册.md) |
+| **配套数据包（cleaned.zip · 52 MB）** | [Release v1.0.0](https://github.com/WinL35/olist-aiweb-chuanzhibei/releases/tag/v1.0.0)；解压到项目根目录即可导入 |
 | 算法实现 | [文档/算法1_算法文档.md](文档/算法1_算法文档.md)、[文档/算法2_算法文档.md](文档/算法2_算法文档.md) |
 | 数据库设计 | [文档/数据库设计文档.md](文档/数据库设计文档.md) |
 | 接口清单 | [文档/API接口清单_20261112.md](文档/API接口清单_20261112.md) |
