@@ -210,6 +210,21 @@ python 一键导入算法库.py     # 建 olist_algo_db（9 表）+ 主库 10 �
 > 注意：`schema.sql` / `Olist_Views.sql` / `olist_algo_mysql.sql` 三个建表脚本**已随仓库提供**，
 > 缺少任一个都无法建出完整库。
 
+> ⚠️ **不要手工单独执行 `schema.sql`**。它开头有 13 条 `DROP TABLE IF EXISTS`，
+> 且库名写死为 `olist_db`——不管你用 `mysql <别的库> < schema.sql` 指定了什么库，
+> 它都会切回 `olist_db` 执行，结果是 13 张表被清空成空表，业务数据全丢。
+> 上面两条 `一键导入` 脚本已经包含建表步骤，**不需要**再手工跑 SQL。
+> 只在「完全从零、库都还没建」时才单独执行它。
+>
+> 真误执行了也不用慌，按上面两条命令重跑一遍即可完整恢复（实测约 2 分钟，
+> `一键导入主库.py` 会重新建表并导入全部 CSV）。恢复后可这样核对：
+>
+> ```sql
+> SELECT COUNT(*) FROM olist_db.fact_order_master;      -- 99441
+> SELECT COUNT(DISTINCT customer_unique_id) FROM olist_db.dim_customer;  -- 96096
+> SELECT ROUND(SUM(payment_value),2) FROM olist_db.fact_order_payment_agg;  -- 13591643.70
+> ```
+
 **④ 启动（30 秒）**
 
 ```bash

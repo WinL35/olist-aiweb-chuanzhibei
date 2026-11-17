@@ -51,6 +51,8 @@ _memory_.ses
 _probe_*
 _tmp_*
 _check.js
+# 本地跑服务/构建时的日志重定向产物（验证部署时用，不属于源码）
+._*.log
 
 # ---- WorkBuddy 本地配置（项目助手的工作日志，与代码无关） ----
 .workbuddy/

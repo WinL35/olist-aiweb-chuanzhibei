@@ -1,5 +1,16 @@
--- Olist 电商数据平台 MySQL 库表结构 (题目一)
+-- Olist 电商数据平台 MySQL 库表结构（13 张表）
 -- 数据库: olist_db
+--
+-- ⚠️⚠️ 危险提示：本脚本在 `USE olist_db` 之后紧跟着 13 条 DROP TABLE IF EXISTS，
+--      会**清空已有数据**。且库名已写死，无论你用哪种方式执行（包括
+--      `mysql <库名> < schema.sql` 指定了别的库），它都会切到 olist_db 上执行。也就是说：
+--        · 空库首次建表       → 可以放心执行
+--        · 库里已有业务数据   → 执行后会变成 13 张空表，数据需重新导入
+--      正常复现流程请用 `python 一键导入主库.py`，它建表后会紧接着导入 CSV，
+--      不需要手工执行本文件。只有「完全从零开始、库还没建」时才单独跑它。
+--
+-- 如果只是想查看表结构而不动数据，请用：
+--      mysqldump --no-data -uroot -p olist_db
 
 CREATE DATABASE IF NOT EXISTS olist_db DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 USE olist_db;
